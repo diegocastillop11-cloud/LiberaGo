@@ -98,25 +98,6 @@ Settings > Environment Variables.
     dar la URL de pruebas (previewstaging) del cambio y esperar mi OK
     explícito. No asumir aprobación por silencio ni por aprobaciones
     anteriores de otros cambios.
-## App Android (APK descargable) [si aplica — borrar sección si no hay app móvil]
-[Completar cuando se decida empaquetar el frontend como APK, ej. con
-Capacitor. Documentar acá, siguiendo el patrón de Ergania]
-- Herramienta usada [ej. Capacitor] — `[carpeta]android`.
-- ¿El APK carga la app en vivo (`server.url`) o empaqueta el build compilado
-  adentro Esto determina si hay que recompilar el APK cada vez que cambia
-  el frontend en producción, o si se actualiza solo.
-- Dónde vive el archivo descargable y qué botónpágina lo sirve.
-- De dónde sale la versión que ve el usuario (constante manual vs. calculada)
-  y en qué archivos hay que sincronizarla (ej. constante de frontend,
-  `versionCode``versionName` de Android, endpoint de backend que informa la
-  última versión disponible).
-- Procedimiento paso a paso para generar y subir un build nuevo (build
-  firmado — dónde están las credencialeskeystore, comando de build,
-  dónde se sube el resultado).
-- Regla después de cada push a producción que toque el frontend, avisar
-  si corresponde recompilar y resubir el APK (o hacerlo, si el proyecto lo
-  automatiza) — para que la versión instalada no quede desactualizada
-  respecto a la web.
 ## Gotchas
 [Vacío al día 1 — este es el espacio para anotar, apenas aparezcan, cosas
 como env vars escopeadas por rama en el hosting, comportamientos raros de
@@ -138,3 +119,22 @@ qué, cómo evitarlodetectarlo.]
 - [ ] Hay una URL de producción viva con al menos un hola — deploy día 1.
 - [ ] El flujo rama → PR → deploy funciona y se usó al menos una vez.
 - [ ] Cero capas especulativas; cero dependencias instaladas por si acaso.
+
+## Skill routing
+
+When the user's request matches an available skill, invoke it via the Skill tool. When in doubt, invoke the skill.
+
+Key routing rules:
+- Product ideas/brainstorming → invoke /office-hours
+- Strategy/scope → invoke /plan-ceo-review
+- Architecture → invoke /plan-eng-review
+- Design system/plan review → invoke /design-consultation or /plan-design-review
+- Full review pipeline → invoke /autoplan
+- Bugs/errors → invoke /investigate
+- QA/testing site behavior → invoke /qa or /qa-only
+- Code review/diff check → invoke /review
+- Visual polish → invoke /design-review
+- Ship/deploy/PR → invoke /ship or /land-and-deploy
+- Save progress → invoke /context-save
+- Resume context → invoke /context-restore
+- Author a backlog-ready spec/issue → invoke /spec

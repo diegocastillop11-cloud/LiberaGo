@@ -37,27 +37,47 @@ Decisiones de runtime tomadas ANTES de codear
   más adelante (ej. comprobante de trámite), se genera en el cliente.
 ## Comandos reales
 ```
-[comando dev — un solo comando que levanta todo]
-[comando build]
-[comando test]
-[comando deploy, si es manual]
+npm run dev         # vercel dev — levanta frontend + funciones /api juntos (requiere `vercel login` una vez)
+npm run build        # tsc -b && vite build
+npm run typecheck    # tsc -b --noEmit
+npm run test          # vitest run
 ```
+Deploy es automático: push a una rama → preview en Vercel; push/merge a `master`
+→ producción (con OK explícito antes, ver Reglas generales #10).
 ## Estructura de carpetas
 ```
-[árbol real del proyecto con una línea de explicación por carpeta]
+api/
+  index.ts        # Express app como función serverless (Vercel) — todo /api/* pasa por acá (ver vercel.json)
+  lib/
+    env.ts        # validación fail-fast de env vars del backend
+    supabase.ts   # cliente Supabase con service_role key (solo backend)
+src/
+  main.tsx        # entry point, valida env del frontend al cargar
+  App.tsx         # rutas por rol: /cliente, /trabajador, /admin
+  lib/
+    env.ts          # validación fail-fast de env vars del frontend (VITE_*)
+    validateEnv.ts  # validador compartido (trim, BOM, \r\n) usado por frontend y backend
+    supabase.ts      # cliente Supabase con anon key (frontend)
+  index.css        # entrada de Tailwind
+vercel.json       # rewrite /api/* → api/index.ts (necesario porque Express hace su propio ruteo interno)
 ```
 ## Convenciones
-- Idioma del copy [español neutro  etc.]
-- Estilo de commits [convencional — feat, fix, docs, chore]
-- [otras convenciones del equipo]
+- Idioma del copy: español neutro (Chile).
+- Estilo de commits: convencional — `feat:`, `fix:`, `docs:`, `chore:`.
+- Roles de usuario: `cliente`, `trabajador`, `admin` — una sola app, rutas por rol.
 ## Variables de entorno requeridas
 ```
-[LISTA_VAR_1]   # qué es, dónde se consigue
-[LISTA_VAR_2]
+VITE_SUPABASE_URL             # Project URL — Supabase dashboard > Settings > API
+VITE_SUPABASE_ANON_KEY        # anon public key — Supabase dashboard > Settings > API
+SUPABASE_URL                  # mismo valor que VITE_SUPABASE_URL, usado en el backend
+SUPABASE_SERVICE_ROLE_KEY     # service_role key (secreta) — Supabase dashboard > Settings > API, solo backend
 ```
-Validadas al boot trim, limpiar BOM, rechazar si contiene `r`, `n` o el
-texto literal `rn` pegado desde un dashboard — fail-fast con mensaje claro,
-no un error críptico downstream.
+Validadas al boot (`src/lib/validateEnv.ts`, usado por `src/lib/env.ts` y
+`api/lib/env.ts`): trim, limpiar BOM, rechazar si contiene `\r` o `\n` —
+fail-fast con mensaje claro, no un error críptico downstream.
+En Vercel, las env vars de **preview están escopeadas por rama** — cada rama
+nueva sale "en negro" hasta agregarlas a mano para esa rama en Project
+Settings > Environment Variables.
 ## Reglas generales
 1. Leer archivos antes de escribir código.
 2. Preferir edición sobre reescritura completa.

@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import { Reveal } from "../components/Reveal";
 import { StatusTimeline } from "../components/StatusTimeline";
-import { btnPrimary, btnSecondary, navLink } from "../lib/ui";
+import { useAuth } from "../lib/AuthContext";
+import { btnPrimary, btnSecondary, btnGhost, navLink } from "../lib/ui";
 
 const servicios = [
   {
@@ -56,6 +57,8 @@ const confianza = [
 ];
 
 export default function Landing() {
+  const { session, profile, loading, signInWithGoogle, signOut } = useAuth();
+
   return (
     <>
       <a
@@ -84,9 +87,26 @@ export default function Landing() {
               Trabaja con nosotros
             </Link>
           </nav>
-          <Link to="/cliente" className={btnPrimary}>
-            Pedir un servicio
-          </Link>
+          <div className="flex items-center gap-3">
+            {!loading &&
+              (session ? (
+                <>
+                  <span className="hidden text-sm text-ink-muted sm:inline">
+                    {profile?.full_name ?? profile?.email}
+                  </span>
+                  <button className={btnGhost} onClick={signOut}>
+                    Salir
+                  </button>
+                </>
+              ) : (
+                <button className={btnGhost} onClick={signInWithGoogle}>
+                  Iniciar sesión
+                </button>
+              ))}
+            <Link to="/cliente" className={btnPrimary}>
+              Pedir un servicio
+            </Link>
+          </div>
         </div>
       </header>
 

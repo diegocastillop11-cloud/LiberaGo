@@ -189,6 +189,16 @@ export function LocationPicker({
         )}
       </div>
 
+      {!searching &&
+        debouncedQuery.trim().length >= 3 &&
+        debouncedQuery !== value.address &&
+        results.length === 0 && (
+          <p className="text-xs text-ink-muted">
+            No encontramos ese lugar. Prueba buscando por la dirección (calle y comuna) en vez
+            del nombre del negocio, o marca el punto directo en el mapa.
+          </p>
+        )}
+
       <div
         ref={mapRef}
         className="relative z-0 h-[200px] w-full overflow-hidden rounded-sm border border-line"

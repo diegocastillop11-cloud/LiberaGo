@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import type { ServiceRequest } from "../lib/types";
 import { RequestStatusCard } from "../components/RequestStatusCard";
+import { AppHeader } from "../components/AppHeader";
 import { btnGhost } from "../lib/ui";
 
 export default function ClienteSolicitudDetalle() {
@@ -41,16 +42,14 @@ export default function ClienteSolicitudDetalle() {
 
   return (
     <div className="min-h-screen bg-bg">
-      <header className="border-b border-line px-6 py-4">
-        <div className="mx-auto flex max-w-[520px] items-center justify-between">
-          <Link to="/" className="font-display text-xl font-semibold text-ink">
-            LiberaGo
-          </Link>
+      <AppHeader
+        maxWidth={520}
+        actions={
           <Link to="/cliente/solicitudes" className={btnGhost}>
             Mis solicitudes
           </Link>
-        </div>
-      </header>
+        }
+      />
 
       <main className="mx-auto max-w-[520px] px-6 py-10">
         <p className="mb-4 text-xs font-semibold uppercase tracking-[0.08em] text-confirmed-ink">

@@ -5,6 +5,8 @@ import ClienteSolicitudes from "./pages/ClienteSolicitudes";
 import ClienteSolicitudDetalle from "./pages/ClienteSolicitudDetalle";
 import TrabajadorDisponibles from "./pages/TrabajadorDisponibles";
 import AdminServices from "./pages/AdminServices";
+import AdminTrabajadores from "./pages/AdminTrabajadores";
+import { RequireAuth } from "./components/RequireAuth";
 
 function Placeholder({ title }: { title: string }) {
   return (
@@ -25,11 +27,58 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
-      <Route path="/cliente" element={<ClienteSolicitar />} />
-      <Route path="/cliente/solicitudes" element={<ClienteSolicitudes />} />
-      <Route path="/cliente/solicitudes/:id" element={<ClienteSolicitudDetalle />} />
-      <Route path="/trabajador" element={<TrabajadorDisponibles />} />
-      <Route path="/admin" element={<AdminServices />} />
+
+      <Route
+        path="/cliente"
+        element={
+          <RequireAuth>
+            <ClienteSolicitar />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/cliente/solicitudes"
+        element={
+          <RequireAuth>
+            <ClienteSolicitudes />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/cliente/solicitudes/:id"
+        element={
+          <RequireAuth>
+            <ClienteSolicitudDetalle />
+          </RequireAuth>
+        }
+      />
+
+      <Route
+        path="/trabajador"
+        element={
+          <RequireAuth require="worker">
+            <TrabajadorDisponibles />
+          </RequireAuth>
+        }
+      />
+
+      <Route
+        path="/admin"
+        element={
+          <RequireAuth require="admin">
+            <AdminServices />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/trabajadores"
+        element={
+          <RequireAuth require="admin">
+            <AdminTrabajadores />
+          </RequireAuth>
+        }
+      />
+
       <Route path="*" element={<Placeholder title="Página no encontrada" />} />
     </Routes>
   );

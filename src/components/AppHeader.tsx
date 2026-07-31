@@ -1,0 +1,47 @@
+import type { ReactNode } from "react";
+import { Link } from "react-router-dom";
+import { useAuth } from "../lib/AuthContext";
+import { btnGhost } from "../lib/ui";
+
+export function AppHeader({
+  subtitle,
+  actions,
+  maxWidth = 720,
+}: {
+  subtitle?: string;
+  actions?: ReactNode;
+  maxWidth?: number;
+}) {
+  const { session, profile, signInWithGoogle, signOut } = useAuth();
+
+  return (
+    <header className="border-b border-line px-6 py-4">
+      <div className="mx-auto flex items-center justify-between" style={{ maxWidth }}>
+        <div className="flex items-baseline gap-3">
+          <Link to="/" className="font-display text-xl font-semibold text-ink">
+            LiberaGo
+          </Link>
+          {subtitle && <span className="text-sm text-ink-muted">{subtitle}</span>}
+        </div>
+
+        <div className="flex items-center gap-3">
+          {actions}
+          {session ? (
+            <div className="flex items-center gap-3">
+              <span className="hidden text-sm text-ink-muted sm:inline">
+                {profile?.full_name ?? profile?.email}
+              </span>
+              <button className={btnGhost} onClick={signOut}>
+                Salir
+              </button>
+            </div>
+          ) : (
+            <button className={btnGhost} onClick={signInWithGoogle}>
+              Iniciar sesión
+            </button>
+          )}
+        </div>
+      </div>
+    </header>
+  );
+}

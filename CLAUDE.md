@@ -19,6 +19,20 @@ después (abajo), no al código.
 Una sola app web (React), con rutas protegidas por rol: `/cliente`, `/trabajador`,
 `/admin`. No son 3 proyectos separados — un solo repo, un solo deploy. Menos
 mantenimiento para un solo dev en el arranque; se puede separar después si duele.
+
+**Modelo de roles (desde 2026-07-31, con Supabase Auth + Google):**
+- `cliente` no es un rol exclusivo — cualquier usuario logueado puede pedir
+  servicios.
+- `trabajador` es un estado (`profiles.worker_status`) que se solicita
+  (`request_worker_status()`) y un admin aprueba/rechaza
+  (`set_worker_status()`, ambas son funciones RPC `security definer`).
+- `admin` (`profiles.is_admin`) nunca se auto-asigna — se activa a mano por
+  SQL directo en Supabase después del primer login de esa persona.
+- Login: Google OAuth vía Supabase Auth (`supabase.auth.signInWithOAuth`).
+  Requiere credenciales de Google Cloud Console configuradas en Supabase
+  Dashboard → Authentication → Providers → Google (fuera del repo, lo hace
+  el usuario directo en los dashboards — ver CLAUDE.md § Gotchas para la
+  guía).
 ## Stack
 | Pieza | Elección | Porqué |
 |---|---|---|

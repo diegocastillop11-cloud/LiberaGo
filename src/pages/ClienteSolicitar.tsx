@@ -1,15 +1,17 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import { useAuth } from "../lib/AuthContext";
 import type { Service, ServiceLocation } from "../lib/types";
-import { DEMO_CLIENT_NAME } from "../lib/demoUsers";
 import { LocationPicker, type LocationValue } from "../components/LocationPicker";
+import { AppHeader } from "../components/AppHeader";
 import { btnPrimary, btnGhost, inputBase, cardBase } from "../lib/ui";
 
 const emptyLocation: LocationValue = { address: "", lat: null, lng: null };
 
 export default function ClienteSolicitar() {
   const navigate = useNavigate();
+  const { user, profile } = useAuth();
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -43,7 +45,7 @@ export default function ClienteSolicitar() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!selected) return;
+    if (!selected || !user) return;
 
     const locations: ServiceLocation[] = selected.location_labels.map((label, i) => {
       const v = locationValues[i] ?? emptyLocation;
@@ -69,7 +71,8 @@ export default function ClienteSolicitar() {
         service_name: selected.name,
         price: selected.price,
         locations,
-        client_name: DEMO_CLIENT_NAME,
+        client_id: user.id,
+        client_name: profile?.full_name ?? profile?.email ?? "Cliente",
         notes: notes.trim() || null,
       })
       .select("id")
@@ -85,16 +88,13 @@ export default function ClienteSolicitar() {
 
   return (
     <div className="min-h-screen bg-bg">
-      <header className="border-b border-line px-6 py-4">
-        <div className="mx-auto flex max-w-[720px] items-center justify-between">
-          <Link to="/" className="font-display text-xl font-semibold text-ink">
-            LiberaGo
-          </Link>
+      <AppHeader
+        actions={
           <Link to="/cliente/solicitudes" className={btnGhost}>
             Mis solicitudes
           </Link>
-        </div>
-      </header>
+        }
+      />
 
       <main className="mx-auto max-w-[720px] px-6 py-10">
         <h1 className="font-display text-2xl font-semibold text-ink">

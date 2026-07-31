@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import { useAuth } from "../lib/AuthContext";
 import type { ServiceRequest } from "../lib/types";
-import { DEMO_WORKER_NAME } from "../lib/demoUsers";
 import { JobMap } from "../components/JobMap";
+import { AppHeader } from "../components/AppHeader";
 import { btnPrimary, btnSecondary, cardBase } from "../lib/ui";
 
 function wazeUrl(lat: number, lng: number) {
@@ -15,18 +15,20 @@ function googleMapsUrl(lat: number, lng: number) {
 }
 
 export default function TrabajadorDisponibles() {
+  const { user, profile } = useAuth();
   const [available, setAvailable] = useState<ServiceRequest[]>([]);
   const [mine, setMine] = useState<ServiceRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   async function loadData() {
+    if (!user) return;
     const [{ data: solicitadas }, { data: propias }] = await Promise.all([
       supabase.from("requests").select("*").eq("status", "solicitado").order("created_at"),
       supabase
         .from("requests")
         .select("*")
-        .eq("worker_name", DEMO_WORKER_NAME)
+        .eq("worker_id", user.id)
         .in("status", ["asignado", "en_curso"])
         .order("created_at"),
     ]);
@@ -44,12 +46,18 @@ export default function TrabajadorDisponibles() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   async function accept(request: ServiceRequest) {
+    if (!user) return;
     const { error } = await supabase
       .from("requests")
-      .update({ worker_name: DEMO_WORKER_NAME, status: "asignado" })
+      .update({
+        worker_id: user.id,
+        worker_name: profile?.full_name ?? profile?.email ?? "Trabajador",
+        status: "asignado",
+      })
       .eq("id", request.id)
       .eq("status", "solicitado");
     if (error) setError(error.message);
@@ -69,14 +77,7 @@ export default function TrabajadorDisponibles() {
 
   return (
     <div className="min-h-screen bg-bg">
-      <header className="border-b border-line px-6 py-4">
-        <div className="mx-auto flex max-w-[720px] items-center justify-between">
-          <Link to="/" className="font-display text-xl font-semibold text-ink">
-            LiberaGo
-          </Link>
-          <span className="text-sm text-ink-muted">Trabajador</span>
-        </div>
-      </header>
+      <AppHeader subtitle="Trabajador" />
 
       <main className="mx-auto max-w-[720px] px-6 py-10">
         {error && (

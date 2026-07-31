@@ -1,3 +1,15 @@
+export type WorkerStatus = "none" | "pending" | "approved" | "rejected";
+
+export type Profile = {
+  id: string;
+  email: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  is_admin: boolean;
+  worker_status: WorkerStatus;
+  created_at: string;
+};
+
 export type RequestStatus =
   | "solicitado"
   | "asignado"

@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import type { Service } from "../lib/types";
+import { AppHeader } from "../components/AppHeader";
 import { btnPrimary, btnGhost, btnDanger, inputBase, cardBase } from "../lib/ui";
 
 const emptyForm = {
@@ -127,14 +128,15 @@ export default function AdminServices() {
 
   return (
     <div className="min-h-screen bg-bg">
-      <header className="border-b border-line px-6 py-4">
-        <div className="mx-auto flex max-w-[900px] items-center justify-between">
-          <Link to="/" className="font-display text-xl font-semibold text-ink">
-            LiberaGo
+      <AppHeader
+        subtitle="Admin — Servicios"
+        maxWidth={900}
+        actions={
+          <Link to="/admin/trabajadores" className={btnGhost}>
+            Trabajadores
           </Link>
-          <span className="text-sm text-ink-muted">Admin — Servicios</span>
-        </div>
-      </header>
+        }
+      />
 
       <main className="mx-auto max-w-[900px] px-6 py-10">
         {error && (

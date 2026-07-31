@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import { useAuth } from "../lib/AuthContext";
 import type { RequestStatus, ServiceRequest } from "../lib/types";
-import { DEMO_CLIENT_NAME } from "../lib/demoUsers";
+import { AppHeader } from "../components/AppHeader";
 import { btnGhost, cardBase } from "../lib/ui";
 
 const STATUS_LABELS: Record<RequestStatus, string> = {
@@ -22,33 +23,32 @@ const STATUS_PILL: Record<RequestStatus, string> = {
 };
 
 export default function ClienteSolicitudes() {
+  const { user } = useAuth();
   const [requests, setRequests] = useState<ServiceRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!user) return;
     supabase
       .from("requests")
       .select("*")
-      .eq("client_name", DEMO_CLIENT_NAME)
+      .eq("client_id", user.id)
       .order("created_at", { ascending: false })
       .then(({ data }) => {
         setRequests((data as ServiceRequest[]) ?? []);
         setLoading(false);
       });
-  }, []);
+  }, [user]);
 
   return (
     <div className="min-h-screen bg-bg">
-      <header className="border-b border-line px-6 py-4">
-        <div className="mx-auto flex max-w-[720px] items-center justify-between">
-          <Link to="/" className="font-display text-xl font-semibold text-ink">
-            LiberaGo
-          </Link>
+      <AppHeader
+        actions={
           <Link to="/cliente" className={btnGhost}>
             Pedir un servicio
           </Link>
-        </div>
-      </header>
+        }
+      />
 
       <main className="mx-auto max-w-[720px] px-6 py-10">
         <h1 className="font-display text-2xl font-semibold text-ink">Mis solicitudes</h1>

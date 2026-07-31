@@ -4,6 +4,7 @@ import { useAuth } from "../lib/AuthContext";
 import { btnPrimary, btnSecondary, inputBase } from "../lib/ui";
 
 const MIN_PASSWORD_LENGTH = 8;
+const SIGNUP_INTENT_KEY = "liberago_signup_intent";
 
 function friendlyError(message: string): string {
   if (message.includes("Invalid login credentials")) return "Correo o contraseña incorrectos.";
@@ -16,6 +17,7 @@ export default function Login() {
   const navigate = useNavigate();
   const { signInWithGoogle, signInWithPassword, signUpWithPassword } = useAuth();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [signupAs, setSignupAs] = useState<"cliente" | "trabajador">("cliente");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -49,6 +51,10 @@ export default function Login() {
       }
     }
 
+    if (signupAs === "trabajador") {
+      window.localStorage.setItem(SIGNUP_INTENT_KEY, "trabajador");
+    }
+
     setSubmitting(true);
     const err =
       mode === "signin"
@@ -61,12 +67,23 @@ export default function Login() {
       return;
     }
     if (mode === "signup") {
-      setInfo("Cuenta creada. Revisa tu correo si Supabase pide confirmarla, o ya puedes ingresar.");
+      setInfo(
+        signupAs === "trabajador"
+          ? "Cuenta creada. Tu postulación como trabajador quedó pendiente de aprobación."
+          : "Cuenta creada. Revisa tu correo si Supabase pide confirmarla, o ya puedes ingresar.",
+      );
       setPassword("");
       setConfirmPassword("");
     } else {
       navigate("/");
     }
+  }
+
+  function handleGoogleClick() {
+    if (mode === "signup" && signupAs === "trabajador") {
+      window.localStorage.setItem(SIGNUP_INTENT_KEY, "trabajador");
+    }
+    signInWithGoogle();
   }
 
   return (
@@ -100,7 +117,42 @@ export default function Login() {
           </button>
         </div>
 
-        <button type="button" className={`${btnSecondary} mt-5 w-full`} onClick={signInWithGoogle}>
+        {mode === "signup" && (
+          <div className="mt-5">
+            <p className="text-sm font-medium text-ink-muted">¿Cómo quieres registrarte?</p>
+            <div className="mt-2 flex gap-2">
+              <button
+                type="button"
+                className={`flex-1 rounded-sm border px-3 py-2 text-sm font-medium transition-colors ${
+                  signupAs === "cliente"
+                    ? "border-action bg-action/10 text-action-ink"
+                    : "border-line text-ink-muted"
+                }`}
+                onClick={() => setSignupAs("cliente")}
+              >
+                Cliente
+              </button>
+              <button
+                type="button"
+                className={`flex-1 rounded-sm border px-3 py-2 text-sm font-medium transition-colors ${
+                  signupAs === "trabajador"
+                    ? "border-action bg-action/10 text-action-ink"
+                    : "border-line text-ink-muted"
+                }`}
+                onClick={() => setSignupAs("trabajador")}
+              >
+                Trabajador
+              </button>
+            </div>
+            {signupAs === "trabajador" && (
+              <p className="mt-2 text-xs text-ink-muted">
+                Tu postulación queda pendiente hasta que un admin la apruebe.
+              </p>
+            )}
+          </div>
+        )}
+
+        <button type="button" className={`${btnSecondary} mt-5 w-full`} onClick={handleGoogleClick}>
           Continuar con Google
         </button>
 

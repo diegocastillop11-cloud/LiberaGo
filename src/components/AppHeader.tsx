@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../lib/AuthContext";
+import { UserBadge } from "./UserBadge";
 import { btnGhost } from "../lib/ui";
 
 export function AppHeader({
@@ -28,9 +29,7 @@ export function AppHeader({
           {actions}
           {session ? (
             <div className="flex items-center gap-3">
-              <span className="hidden text-sm text-ink-muted sm:inline">
-                {profile?.full_name ?? profile?.email}
-              </span>
+              <UserBadge profile={profile} />
               <button className={btnGhost} onClick={signOut}>
                 Salir
               </button>

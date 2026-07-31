@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Reveal } from "../components/Reveal";
+import { UserBadge } from "../components/UserBadge";
 import { StatusTimeline } from "../components/StatusTimeline";
 import { useAuth } from "../lib/AuthContext";
 import { btnPrimary, btnSecondary, btnGhost, navLink } from "../lib/ui";
@@ -91,9 +92,7 @@ export default function Landing() {
             {!loading &&
               (session ? (
                 <>
-                  <span className="hidden text-sm text-ink-muted sm:inline">
-                    {profile?.full_name ?? profile?.email}
-                  </span>
+                  <UserBadge profile={profile} />
                   <button className={btnGhost} onClick={signOut}>
                     Salir
                   </button>

@@ -23,6 +23,8 @@ type AuthValue = {
 
 const AuthContext = createContext<AuthValue | null>(null);
 
+const SIGNUP_INTENT_KEY = "liberago_signup_intent";
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -30,7 +32,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function loadProfile(userId: string) {
     const { data } = await supabase.from("profiles").select("*").eq("id", userId).single();
-    setProfile((data as Profile) ?? null);
+    let current = (data as Profile) ?? null;
+
+    // Si eligió "registrarme como trabajador", esto aplica esa postulación
+    // apenas exista sesión real — cubre email/password y Google por igual,
+    // sin depender de metadata que el proveedor OAuth no siempre deja pasar.
+    const intent = window.localStorage.getItem(SIGNUP_INTENT_KEY);
+    if (intent === "trabajador" && current?.worker_status === "none") {
+      window.localStorage.removeItem(SIGNUP_INTENT_KEY);
+      const { error } = await supabase.rpc("request_worker_status");
+      if (!error) {
+        const refreshed = await supabase.from("profiles").select("*").eq("id", userId).single();
+        current = (refreshed.data as Profile) ?? current;
+      }
+    } else if (intent) {
+      window.localStorage.removeItem(SIGNUP_INTENT_KEY);
+    }
+
+    setProfile(current);
   }
 
   useEffect(() => {

@@ -108,6 +108,23 @@ Settings > Environment Variables.
   las URLs del flujo anterior después de la fecha de deprecación. Cómo
   evitarlo: mantener `vercel` en `devDependencies` actualizado
   (`npm view vercel version` para chequear la última) — ya está en `^58.4.4`.
+- **Imports relativos en `api/` necesitan extensión `.js` explícita.**
+  Qué pasó: `/api/health` devolvía `FUNCTION_INVOCATION_FAILED` en el
+  deploy real (`Error [ERR_MODULE_NOT_FOUND]: Cannot find module
+  '/var/task/api/lib/env'`) aunque el build y el typecheck pasaban limpios.
+  Por qué: `package.json` tiene `"type": "module"` (ESM real), y el runtime
+  Node de las funciones serverless de Vercel no bundlea `api/*.ts` en un
+  solo archivo — cada import relativo se resuelve con el loader ESM nativo
+  de Node, que exige la extensión exacta del archivo compilado. Vite sí
+  resuelve imports sin extensión (por eso el frontend nunca mostró el
+  problema) pero el runtime de `api/` no. Cómo evitarlo/detectarlo: todo
+  import relativo dentro de `api/` (o compartido desde `src/`) debe escribirse
+  con `.js` al final aunque el archivo fuente sea `.ts` (ej.
+  `import { env } from "./env.js"`) — es la convención estándar de
+  TypeScript+ESM. `tsc --noEmit` NO detecta este error porque
+  `moduleResolution: "Bundler"` es permisivo; solo se ve corriendo el
+  endpoint de verdad (`vercel curl <url>/api/health` o `vercel logs`),
+  nunca solo con el build local.
 ## Backlog  después
 - [Ideas descartadas para ahora con motivo — evita reabrir sin evidencia
   nueva]

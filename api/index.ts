@@ -1,5 +1,5 @@
 import express from "express";
-import "./lib/env";
+import "./lib/env.js";
 
 const app = express();
 app.use(express.json());

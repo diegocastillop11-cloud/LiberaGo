@@ -41,7 +41,9 @@ export type ServiceRequest = {
   service_name: string;
   price: number;
   locations: ServiceLocation[];
+  client_id: string;
   client_name: string;
+  worker_id: string | null;
   worker_name: string | null;
   status: RequestStatus;
   notes: string | null;

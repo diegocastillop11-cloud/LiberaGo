@@ -53,9 +53,14 @@ export default function AdminTrabajadores() {
         subtitle="Admin — Trabajadores"
         maxWidth={900}
         actions={
-          <Link to="/admin" className={btnGhost}>
-            Servicios
-          </Link>
+          <>
+            <Link to="/admin" className={btnGhost}>
+              Servicios
+            </Link>
+            <Link to="/admin/solicitudes" className={btnGhost}>
+              Solicitudes
+            </Link>
+          </>
         }
       />
 

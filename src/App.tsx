@@ -7,6 +7,7 @@ import ClienteSolicitudDetalle from "./pages/ClienteSolicitudDetalle";
 import TrabajadorDisponibles from "./pages/TrabajadorDisponibles";
 import AdminServices from "./pages/AdminServices";
 import AdminTrabajadores from "./pages/AdminTrabajadores";
+import AdminSolicitudes from "./pages/AdminSolicitudes";
 import { RequireAuth } from "./components/RequireAuth";
 
 function Placeholder({ title }: { title: string }) {
@@ -77,6 +78,14 @@ export default function App() {
         element={
           <RequireAuth require="admin">
             <AdminTrabajadores />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/solicitudes"
+        element={
+          <RequireAuth require="admin">
+            <AdminSolicitudes />
           </RequireAuth>
         }
       />

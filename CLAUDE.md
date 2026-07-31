@@ -125,6 +125,16 @@ Settings > Environment Variables.
   `moduleResolution: "Bundler"` es permisivo; solo se ve corriendo el
   endpoint de verdad (`vercel curl <url>/api/health` o `vercel logs`),
   nunca solo con el build local.
+- **Rutas del SPA dan 404 en Vercel al entrar directo (ej. `/admin`).**
+  Qué pasó: `/`, que carga vía navegación del cliente, funciona bien; pero
+  entrar directo a `/admin`, `/trabajador`, etc. (o refrescar en esas rutas)
+  da `404: NOT_FOUND`. Por qué: React Router maneja el ruteo en el cliente,
+  pero Vercel sirve archivos estáticos — sin una regla, busca un archivo
+  literal en `/admin` y no existe. `vercel.json` solo tenía el rewrite de
+  `/api/*`, faltaba el catch-all. Cómo evitarlo: `vercel.json` necesita
+  `{ "source": "/(.*)", "destination": "/index.html" }` **después** de la
+  regla de `/api/*` (los assets estáticos existentes se sirven igual,
+  Vercel prioriza filesystem antes que rewrites).
 ## Backlog  después
 - [Ideas descartadas para ahora con motivo — evita reabrir sin evidencia
   nueva]

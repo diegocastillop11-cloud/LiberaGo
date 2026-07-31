@@ -14,6 +14,7 @@ export function RequestStatusCard({ request }: { request: ServiceRequest }) {
       <div className="rounded-lg border border-line bg-surface p-6">
         <p className="font-display text-lg font-semibold text-ink">{request.service_name}</p>
         <p className="mt-2 text-sm text-error">Esta solicitud fue cancelada.</p>
+        <WorkerNotes request={request} />
       </div>
     );
   }
@@ -104,6 +105,8 @@ export function RequestStatusCard({ request }: { request: ServiceRequest }) {
         </div>
       )}
 
+      <WorkerNotes request={request} />
+
       <div className="mt-5 flex flex-col gap-0">
         {request.locations.map((loc) => (
           <div
@@ -128,6 +131,24 @@ export function RequestStatusCard({ request }: { request: ServiceRequest }) {
           <span className="font-data font-medium text-ink">${request.price.toLocaleString("es-CL")}</span>
         </div>
       </div>
+    </div>
+  );
+}
+
+function WorkerNotes({ request }: { request: ServiceRequest }) {
+  if (request.worker_notes.length === 0) return null;
+
+  return (
+    <div className="mt-5 flex flex-col gap-2">
+      <p className="text-sm font-medium text-ink-muted">Notas del trabajador</p>
+      {request.worker_notes.map((note, i) => (
+        <div key={i} className="rounded-md bg-surface-2 p-3 text-sm">
+          <p className="text-ink">{note.text}</p>
+          <p className="mt-1 text-xs text-ink-muted">
+            {new Date(note.created_at).toLocaleString("es-CL")}
+          </p>
+        </div>
+      ))}
     </div>
   );
 }

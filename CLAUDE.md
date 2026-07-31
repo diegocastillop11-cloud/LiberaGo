@@ -99,10 +99,15 @@ Settings > Environment Variables.
     explícito. No asumir aprobación por silencio ni por aprobaciones
     anteriores de otros cambios.
 ## Gotchas
-[Vacío al día 1 — este es el espacio para anotar, apenas aparezcan, cosas
-como env vars escopeadas por rama en el hosting, comportamientos raros de
-alguna librería, límites del runtime serverless, etc. Formato qué pasó, por
-qué, cómo evitarlodetectarlo.]
+- **`vercel login` con el CLI viejo solo redirige a un changelog, no autentica.**
+  Qué pasó: con `vercel@37.x`, elegir "Continue with GitHub" abre
+  `vercel.com/api/registration/login-with-github?...`, que Vercel deprecó
+  (26 feb 2026) y ahora redirige a `vercel.com/changelog/new-vercel-cli-login-flow`
+  en vez de autenticar — parece que "no pasa nada" pero en realidad el flujo
+  entero ya no existe. Por qué: Vercel migró a OAuth 2.0 Device Flow y mató
+  las URLs del flujo anterior después de la fecha de deprecación. Cómo
+  evitarlo: mantener `vercel` en `devDependencies` actualizado
+  (`npm view vercel version` para chequear la última) — ya está en `^58.4.4`.
 ## Backlog  después
 - [Ideas descartadas para ahora con motivo — evita reabrir sin evidencia
   nueva]

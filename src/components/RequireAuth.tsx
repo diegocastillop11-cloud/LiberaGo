@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../lib/AuthContext";
 import { supabase } from "../lib/supabase";
 import { AppHeader } from "./AppHeader";
@@ -22,7 +23,7 @@ export function RequireAuth({
   children: ReactNode;
   require?: "worker" | "admin";
 }) {
-  const { session, profile, loading, signInWithGoogle, refreshProfile } = useAuth();
+  const { session, profile, loading, refreshProfile } = useAuth();
 
   if (loading) {
     return (
@@ -36,10 +37,10 @@ export function RequireAuth({
     return (
       <Screen>
         <p className="font-display text-xl font-semibold text-ink">Necesitas iniciar sesión</p>
-        <p className="text-sm text-ink-muted">Usa tu cuenta de Google para continuar.</p>
-        <button className={btnPrimary} onClick={signInWithGoogle}>
-          Continuar con Google
-        </button>
+        <p className="text-sm text-ink-muted">Ingresa con tu correo o con Google para continuar.</p>
+        <Link to="/login" className={btnPrimary}>
+          Iniciar sesión
+        </Link>
       </Screen>
     );
   }

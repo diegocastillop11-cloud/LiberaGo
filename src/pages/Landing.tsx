@@ -57,7 +57,7 @@ const confianza = [
 ];
 
 export default function Landing() {
-  const { session, profile, loading, signInWithGoogle, signOut } = useAuth();
+  const { session, profile, loading, signOut } = useAuth();
 
   return (
     <>
@@ -99,9 +99,9 @@ export default function Landing() {
                   </button>
                 </>
               ) : (
-                <button className={btnGhost} onClick={signInWithGoogle}>
+                <Link to="/login" className={btnGhost}>
                   Iniciar sesión
-                </button>
+                </Link>
               ))}
             <Link to="/cliente" className={btnPrimary}>
               Pedir un servicio

@@ -1,5 +1,6 @@
 import { Routes, Route, Link } from "react-router-dom";
 import Landing from "./pages/Landing";
+import Login from "./pages/Login";
 import ClienteSolicitar from "./pages/ClienteSolicitar";
 import ClienteSolicitudes from "./pages/ClienteSolicitudes";
 import ClienteSolicitudDetalle from "./pages/ClienteSolicitudDetalle";
@@ -27,6 +28,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
+      <Route path="/login" element={<Login />} />
 
       <Route
         path="/cliente"

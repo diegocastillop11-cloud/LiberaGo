@@ -15,6 +15,8 @@ type AuthValue = {
   profile: Profile | null;
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
+  signInWithPassword: (email: string, password: string) => Promise<string | null>;
+  signUpWithPassword: (email: string, password: string) => Promise<string | null>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 };
@@ -63,6 +65,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   }
 
+  async function signInWithPassword(email: string, password: string) {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    return error?.message ?? null;
+  }
+
+  async function signUpWithPassword(email: string, password: string) {
+    const { error } = await supabase.auth.signUp({ email, password });
+    return error?.message ?? null;
+  }
+
   async function signOut() {
     await supabase.auth.signOut();
   }
@@ -79,6 +91,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         profile,
         loading,
         signInWithGoogle,
+        signInWithPassword,
+        signUpWithPassword,
         signOut,
         refreshProfile,
       }}

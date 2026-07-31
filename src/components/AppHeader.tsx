@@ -12,7 +12,7 @@ export function AppHeader({
   actions?: ReactNode;
   maxWidth?: number;
 }) {
-  const { session, profile, signInWithGoogle, signOut } = useAuth();
+  const { session, profile, signOut } = useAuth();
 
   return (
     <header className="border-b border-line px-6 py-4">
@@ -36,9 +36,9 @@ export function AppHeader({
               </button>
             </div>
           ) : (
-            <button className={btnGhost} onClick={signInWithGoogle}>
+            <Link to="/login" className={btnGhost}>
               Iniciar sesión
-            </button>
+            </Link>
           )}
         </div>
       </div>

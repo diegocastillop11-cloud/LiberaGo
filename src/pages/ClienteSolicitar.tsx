@@ -17,6 +17,7 @@ export default function ClienteSolicitar() {
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<Service | null>(null);
   const [locationValues, setLocationValues] = useState<LocationValue[]>([]);
+  const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -63,6 +64,11 @@ export default function ClienteSolicitar() {
       return;
     }
 
+    if (!phone.trim()) {
+      setError("Ingresa un teléfono de contacto.");
+      return;
+    }
+
     setSubmitting(true);
     const { data, error } = await supabase
       .from("requests")
@@ -73,6 +79,7 @@ export default function ClienteSolicitar() {
         locations,
         client_id: user.id,
         client_name: profile?.full_name ?? profile?.email ?? "Cliente",
+        client_phone: phone.trim(),
         notes: notes.trim() || null,
       })
       .select("id")
@@ -153,6 +160,24 @@ export default function ClienteSolicitar() {
                   onChange={(v) => updateLocationValue(i, v)}
                 />
               ))}
+
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="phone" className="text-sm font-medium text-ink-muted">
+                  Teléfono de contacto
+                </label>
+                <input
+                  id="phone"
+                  type="tel"
+                  className={inputBase}
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+56 9 1234 5678"
+                  required
+                />
+                <p className="text-xs text-ink-muted">
+                  Por si el trabajador necesita coordinar algo contigo.
+                </p>
+              </div>
 
               <div className="flex flex-col gap-1.5">
                 <label htmlFor="notes" className="text-sm font-medium text-ink-muted">

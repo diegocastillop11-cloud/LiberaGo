@@ -174,6 +174,17 @@ export default function AdminSolicitudes() {
                 <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-xs text-ink-muted">
                   <span>
                     Cliente: <span className="text-ink">{r.client_name}</span>
+                    {r.client_phone && (
+                      <>
+                        {" · "}
+                        <a
+                          href={`tel:${r.client_phone}`}
+                          className="text-action underline-offset-4 hover:underline"
+                        >
+                          {r.client_phone}
+                        </a>
+                      </>
+                    )}
                   </span>
                   <span>
                     Trabajador:{" "}
@@ -187,7 +198,10 @@ export default function AdminSolicitudes() {
                     : "Servicio remoto (sin dirección)"}
                 </p>
 
-                {r.notes && <p className="mt-1 text-xs text-ink-muted">"{r.notes}"</p>}
+                {r.notes && <p className="mt-1 text-xs text-ink-muted">Cliente: "{r.notes}"</p>}
+                {r.worker_notes && (
+                  <p className="mt-1 text-xs text-ink-muted">Trabajador: "{r.worker_notes}"</p>
+                )}
 
                 {r.status !== "completado" && r.status !== "cancelado" && (
                   <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-line pt-4">

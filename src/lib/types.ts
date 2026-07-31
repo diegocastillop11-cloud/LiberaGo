@@ -43,8 +43,10 @@ export type ServiceRequest = {
   locations: ServiceLocation[];
   client_id: string;
   client_name: string;
+  client_phone: string | null;
   worker_id: string | null;
   worker_name: string | null;
+  worker_notes: string | null;
   status: RequestStatus;
   notes: string | null;
   created_at: string;

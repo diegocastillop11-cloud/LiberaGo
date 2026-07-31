@@ -4,7 +4,7 @@ import { useAuth } from "../lib/AuthContext";
 import type { ServiceRequest } from "../lib/types";
 import { JobMap } from "../components/JobMap";
 import { AppHeader } from "../components/AppHeader";
-import { btnPrimary, btnSecondary, cardBase } from "../lib/ui";
+import { btnGhost, btnPrimary, btnSecondary, cardBase, inputBase } from "../lib/ui";
 
 function wazeUrl(lat: number, lng: number) {
   return `https://waze.com/ul?ll=${lat},${lng}&navigate=yes`;
@@ -20,6 +20,7 @@ export default function TrabajadorDisponibles() {
   const [mine, setMine] = useState<ServiceRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
 
   async function loadData() {
     if (!user) return;
@@ -63,10 +64,30 @@ export default function TrabajadorDisponibles() {
     if (error) setError(error.message);
   }
 
+  async function startRequest(request: ServiceRequest) {
+    const { error } = await supabase
+      .from("requests")
+      .update({ status: "en_curso" })
+      .eq("id", request.id);
+    if (error) setError(error.message);
+  }
+
   async function completeRequest(request: ServiceRequest) {
     const { error } = await supabase
       .from("requests")
       .update({ status: "completado" })
+      .eq("id", request.id);
+    if (error) setError(error.message);
+  }
+
+  function noteValue(request: ServiceRequest) {
+    return noteDrafts[request.id] ?? request.worker_notes ?? "";
+  }
+
+  async function saveNote(request: ServiceRequest) {
+    const { error } = await supabase
+      .from("requests")
+      .update({ worker_notes: noteValue(request).trim() || null })
       .eq("id", request.id);
     if (error) setError(error.message);
   }
@@ -109,11 +130,33 @@ export default function TrabajadorDisponibles() {
                       </span>
                     </div>
 
+                    <p className="mt-1 text-xs text-ink-muted">
+                      Cliente: {r.client_name}
+                      {r.client_phone && (
+                        <>
+                          {" · "}
+                          <a
+                            href={`tel:${r.client_phone}`}
+                            className="text-action underline-offset-4 hover:underline"
+                          >
+                            {r.client_phone}
+                          </a>
+                        </>
+                      )}
+                    </p>
+
                     {r.locations.length === 0 ? (
-                      <div className="mt-4">
-                        <button className={btnPrimary} onClick={() => completeRequest(r)}>
-                          Marcar completado
-                        </button>
+                      <div className="mt-4 flex gap-2">
+                        {r.status === "asignado" && (
+                          <button className={btnPrimary} onClick={() => startRequest(r)}>
+                            Marcar en curso
+                          </button>
+                        )}
+                        {r.status === "en_curso" && (
+                          <button className={btnPrimary} onClick={() => completeRequest(r)}>
+                            Marcar completado
+                          </button>
+                        )}
                       </div>
                     ) : (
                       <div className="mt-4">
@@ -178,6 +221,27 @@ export default function TrabajadorDisponibles() {
                         );
                       })}
                     </ol>
+
+                    <div className="mt-4 flex flex-col gap-1.5 border-t border-line pt-4">
+                      <label htmlFor={`notes-${r.id}`} className="text-xs font-medium text-ink-muted">
+                        Notas del trabajo
+                      </label>
+                      <textarea
+                        id={`notes-${r.id}`}
+                        className={`${inputBase} min-h-16 resize-y`}
+                        value={noteValue(r)}
+                        onChange={(e) =>
+                          setNoteDrafts((d) => ({ ...d, [r.id]: e.target.value }))
+                        }
+                        placeholder="Ej. contacté al cliente, quedamos a las 17:00"
+                      />
+                      <button
+                        className={`${btnGhost} mt-1 !justify-start !px-0`}
+                        onClick={() => saveNote(r)}
+                      >
+                        Guardar nota
+                      </button>
+                    </div>
                   </div>
                 );
               })}

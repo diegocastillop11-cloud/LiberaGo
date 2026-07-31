@@ -1,3 +1,117 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --color-bg: 239 203 110;
+  --color-surface: 255 252 245;
+  --color-surface-2: 246 223 160;
+  --color-text: 16 32 45;
+  --color-text-muted: 99 81 46;
+  --color-border: 224 192 119;
+  --color-blue: 44 95 138;
+  --color-blue-ink: 31 70 102;
+  --color-on-blue: 255 255 255;
+  --color-gold: 168 118 28;
+  --color-gold-ink: 126 87 20;
+  --color-on-gold: 255 252 245;
+  --color-success: 47 122 79;
+  --color-warning: 168 85 28;
+  --color-error: 179 67 43;
+  --color-info: 44 95 138;
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --color-bg: 34 28 16;
+  --color-surface: 46 39 23;
+  --color-surface-2: 58 48 24;
+  --color-text: 245 239 221;
+  --color-text-muted: 181 168 125;
+  --color-border: 69 58 32;
+  --color-blue: 76 134 174;
+  --color-blue-ink: 91 150 190;
+  --color-on-blue: 16 21 26;
+  --color-gold: 217 169 59;
+  --color-gold-ink: 185 134 42;
+  --color-on-gold: 34 28 16;
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-bg: 34 28 16;
+    --color-surface: 46 39 23;
+    --color-surface-2: 58 48 24;
+    --color-text: 245 239 221;
+    --color-text-muted: 181 168 125;
+    --color-border: 69 58 32;
+    --color-blue: 76 134 174;
+    --color-blue-ink: 91 150 190;
+    --color-on-blue: 16 21 26;
+    --color-gold: 217 169 59;
+    --color-gold-ink: 185 134 42;
+    --color-on-gold: 34 28 16;
+    color-scheme: dark;
+  }
+}
+
+body {
+  background-color: rgb(var(--color-bg));
+  color: rgb(var(--color-text));
+}
+
+/* Scroll-reveal: fades content in on first viewport entry.
+   Toggled by useRevealOnScroll (IntersectionObserver); respects prefers-reduced-motion. */
+.reveal {
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity 350ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    transform 350ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Pulse ring on the timeline's "current" step — the one live signal on the page.
+   Uses transform+opacity only (compositor-friendly), never box-shadow. */
+.pulse-dot {
+  position: relative;
+}
+
+.pulse-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: rgb(var(--color-blue));
+  transform: scale(1);
+  opacity: 0.55;
+  animation: pulse-ring 2.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .pulse-dot::after {
+    animation: none;
+    display: none;
+  }
+}

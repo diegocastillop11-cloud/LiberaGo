@@ -8,3 +8,8 @@ dist/
 .vercel/
 scratch/
 .DS_Store
+.gstack/
+# Skills instalados vía `npx skills add` — tooling del agente, no del producto
+.agents/
+.claude/skills/
+skills-lock.json

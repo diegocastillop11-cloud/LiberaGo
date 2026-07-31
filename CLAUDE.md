@@ -120,6 +120,12 @@ qué, cómo evitarlodetectarlo.]
 - [ ] El flujo rama → PR → deploy funciona y se usó al menos una vez.
 - [ ] Cero capas especulativas; cero dependencias instaladas por si acaso.
 
+## Design System
+Siempre leer DESIGN.md antes de tomar decisiones visuales o de UI. Ahí están
+definidos tipografía, color, spacing y motion. No desviar sin aprobación
+explícita del usuario. En QA, marcar cualquier código que no calce con
+DESIGN.md.
+
 ## Skill routing
 
 When the user's request matches an available skill, invoke it via the Skill tool. When in doubt, invoke the skill.

@@ -80,16 +80,19 @@ export default function TrabajadorDisponibles() {
     if (error) setError(error.message);
   }
 
-  function noteValue(request: ServiceRequest) {
-    return noteDrafts[request.id] ?? request.worker_notes ?? "";
-  }
-
-  async function saveNote(request: ServiceRequest) {
+  async function addNote(request: ServiceRequest) {
+    const text = (noteDrafts[request.id] ?? "").trim();
+    if (!text) return;
+    const updated = [...request.worker_notes, { text, created_at: new Date().toISOString() }];
     const { error } = await supabase
       .from("requests")
-      .update({ worker_notes: noteValue(request).trim() || null })
+      .update({ worker_notes: updated })
       .eq("id", request.id);
-    if (error) setError(error.message);
+    if (error) {
+      setError(error.message);
+      return;
+    }
+    setNoteDrafts((d) => ({ ...d, [request.id]: "" }));
   }
 
   async function completeLocation(request: ServiceRequest, index: number) {
@@ -222,22 +225,34 @@ export default function TrabajadorDisponibles() {
                       })}
                     </ol>
 
-                    <div className="mt-4 flex flex-col gap-1.5 border-t border-line pt-4">
-                      <label htmlFor={`notes-${r.id}`} className="text-xs font-medium text-ink-muted">
-                        Notas del trabajo
-                      </label>
+                    <div className="mt-4 flex flex-col gap-2 border-t border-line pt-4">
+                      <p className="text-xs font-medium text-ink-muted">Notas del trabajo</p>
+
+                      {r.worker_notes.length > 0 && (
+                        <ul className="flex flex-col gap-2">
+                          {r.worker_notes.map((note, i) => (
+                            <li key={i} className="rounded-md bg-surface-2 p-2.5 text-xs">
+                              <p className="text-ink">{note.text}</p>
+                              <p className="mt-0.5 text-[11px] text-ink-muted">
+                                {new Date(note.created_at).toLocaleString("es-CL")}
+                              </p>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+
                       <textarea
                         id={`notes-${r.id}`}
                         className={`${inputBase} min-h-16 resize-y`}
-                        value={noteValue(r)}
+                        value={noteDrafts[r.id] ?? ""}
                         onChange={(e) =>
                           setNoteDrafts((d) => ({ ...d, [r.id]: e.target.value }))
                         }
                         placeholder="Ej. contacté al cliente, quedamos a las 17:00"
                       />
                       <button
-                        className={`${btnGhost} mt-1 !justify-start !px-0`}
-                        onClick={() => saveNote(r)}
+                        className={`${btnGhost} !justify-start !px-0`}
+                        onClick={() => addNote(r)}
                       >
                         Guardar nota
                       </button>

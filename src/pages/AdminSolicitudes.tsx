@@ -199,8 +199,14 @@ export default function AdminSolicitudes() {
                 </p>
 
                 {r.notes && <p className="mt-1 text-xs text-ink-muted">Cliente: "{r.notes}"</p>}
-                {r.worker_notes && (
-                  <p className="mt-1 text-xs text-ink-muted">Trabajador: "{r.worker_notes}"</p>
+                {r.worker_notes.length > 0 && (
+                  <div className="mt-1 flex flex-col gap-0.5">
+                    {r.worker_notes.map((note, i) => (
+                      <p key={i} className="text-xs text-ink-muted">
+                        Trabajador ({new Date(note.created_at).toLocaleString("es-CL")}): "{note.text}"
+                      </p>
+                    ))}
+                  </div>
                 )}
 
                 {r.status !== "completado" && r.status !== "cancelado" && (

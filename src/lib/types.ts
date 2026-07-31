@@ -25,6 +25,11 @@ export type ServiceLocation = {
   completed_at: string | null;
 };
 
+export type WorkerNote = {
+  text: string;
+  created_at: string;
+};
+
 export type Service = {
   id: string;
   name: string;
@@ -46,7 +51,7 @@ export type ServiceRequest = {
   client_phone: string | null;
   worker_id: string | null;
   worker_name: string | null;
-  worker_notes: string | null;
+  worker_notes: WorkerNote[];
   status: RequestStatus;
   notes: string | null;
   created_at: string;

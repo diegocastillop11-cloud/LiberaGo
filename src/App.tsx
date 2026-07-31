@@ -1,5 +1,10 @@
 import { Routes, Route, Link } from "react-router-dom";
 import Landing from "./pages/Landing";
+import ClienteSolicitar from "./pages/ClienteSolicitar";
+import ClienteSolicitudes from "./pages/ClienteSolicitudes";
+import ClienteSolicitudDetalle from "./pages/ClienteSolicitudDetalle";
+import TrabajadorDisponibles from "./pages/TrabajadorDisponibles";
+import AdminServices from "./pages/AdminServices";
 
 function Placeholder({ title }: { title: string }) {
   return (
@@ -20,9 +25,12 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
-      <Route path="/cliente/*" element={<Placeholder title="Vista cliente" />} />
-      <Route path="/trabajador/*" element={<Placeholder title="Vista trabajador" />} />
-      <Route path="/admin/*" element={<Placeholder title="Vista admin" />} />
+      <Route path="/cliente" element={<ClienteSolicitar />} />
+      <Route path="/cliente/solicitudes" element={<ClienteSolicitudes />} />
+      <Route path="/cliente/solicitudes/:id" element={<ClienteSolicitudDetalle />} />
+      <Route path="/trabajador" element={<TrabajadorDisponibles />} />
+      <Route path="/admin" element={<AdminServices />} />
+      <Route path="*" element={<Placeholder title="Página no encontrada" />} />
     </Routes>
   );
 }

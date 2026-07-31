@@ -1,15 +1,7 @@
 import { Link } from "react-router-dom";
 import { Reveal } from "../components/Reveal";
 import { StatusTimeline } from "../components/StatusTimeline";
-
-const btnPrimary =
-  "inline-flex min-h-[44px] items-center justify-center gap-2 rounded-md bg-action px-6 py-3.5 text-[15px] font-medium text-on-action transition-colors duration-200 [touch-action:manipulation] hover:bg-action-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action focus-visible:ring-offset-2 focus-visible:ring-offset-bg";
-
-const btnSecondary =
-  "inline-flex min-h-[44px] items-center justify-center gap-2 rounded-md border border-action bg-transparent px-6 py-3.5 text-[15px] font-medium text-action transition-colors duration-200 [touch-action:manipulation] hover:bg-action/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action focus-visible:ring-offset-2 focus-visible:ring-offset-bg";
-
-const navLink =
-  "rounded-sm py-2 text-sm font-medium text-ink-muted transition-colors [touch-action:manipulation] hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action focus-visible:ring-offset-2 focus-visible:ring-offset-bg";
+import { btnPrimary, btnSecondary, navLink } from "../lib/ui";
 
 const servicios = [
   {

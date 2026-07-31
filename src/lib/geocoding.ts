@@ -13,7 +13,7 @@ export async function searchAddress(query: string): Promise<GeocodeResult[]> {
   url.searchParams.set("q", query);
   url.searchParams.set("format", "jsonv2");
   url.searchParams.set("countrycodes", "cl");
-  url.searchParams.set("limit", "5");
+  url.searchParams.set("limit", "8");
 
   const res = await fetch(url.toString());
   if (!res.ok) throw new Error("No se pudo buscar la dirección.");

@@ -135,6 +135,19 @@ Settings > Environment Variables.
   `{ "source": "/(.*)", "destination": "/index.html" }` **después** de la
   regla de `/api/*` (los assets estáticos existentes se sirven igual,
   Vercel prioriza filesystem antes que rewrites).
+- **Nominatim (OSM) no siempre encuentra un lugar por su nombre comercial.**
+  Qué pasó: buscar "San Dámaso" no mostraba la planta de revisión técnica
+  de La Florida, aunque sí mostraba otras 4 en distintas comunas. No era un
+  bug — confirmado con `curl` directo a la API: esa planta existe en OSM
+  (`Avenida Tobalaba, Lo Cañas, La Florida`) pero no está etiquetada con el
+  nombre comercial "San Dámaso", solo como "Planta de Revisión Técnica"
+  genérica. Por qué: Nominatim/OSM es geocoding de calles y POIs mapeados
+  por la comunidad — no tiene el nivel de cobertura de nombres comerciales
+  de Google Places. Cómo evitarlo/mitigarlo: buscar por dirección (calle +
+  comuna) siempre funciona; buscar por nombre de negocio depende de si
+  alguien lo etiquetó en OSM. Si esto se vuelve un problema frecuente,
+  reconsiderar Google Places/Mapbox (decisión de Fase 1, tiene costo/API
+  key — ver DESIGN.md o pedirle al usuario).
 ## Backlog  después
 - [Ideas descartadas para ahora con motivo — evita reabrir sin evidencia
   nueva]

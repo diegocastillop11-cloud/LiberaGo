@@ -1,19 +1,18 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import type { RequestStatus, ServiceRequest } from "../lib/types";
+import type { ServiceRequest } from "../lib/types";
 import { DEMO_WORKER_NAME } from "../lib/demoUsers";
-import { btnPrimary, cardBase } from "../lib/ui";
+import { JobMap } from "../components/JobMap";
+import { btnPrimary, btnSecondary, cardBase } from "../lib/ui";
 
-const NEXT_STATUS: Partial<Record<RequestStatus, RequestStatus>> = {
-  asignado: "en_curso",
-  en_curso: "completado",
-};
+function wazeUrl(lat: number, lng: number) {
+  return `https://waze.com/ul?ll=${lat},${lng}&navigate=yes`;
+}
 
-const NEXT_LABEL: Partial<Record<RequestStatus, string>> = {
-  asignado: "Marcar en curso",
-  en_curso: "Marcar completado",
-};
+function googleMapsUrl(lat: number, lng: number) {
+  return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+}
 
 export default function TrabajadorDisponibles() {
   const [available, setAvailable] = useState<ServiceRequest[]>([]);
@@ -56,10 +55,15 @@ export default function TrabajadorDisponibles() {
     if (error) setError(error.message);
   }
 
-  async function advance(request: ServiceRequest) {
-    const next = NEXT_STATUS[request.status];
-    if (!next) return;
-    const { error } = await supabase.from("requests").update({ status: next }).eq("id", request.id);
+  async function completeLocation(request: ServiceRequest, index: number) {
+    const updatedLocations = request.locations.map((loc, i) =>
+      i === index ? { ...loc, completed_at: new Date().toISOString() } : loc,
+    );
+    const allDone = updatedLocations.every((l) => l.completed_at);
+    const { error } = await supabase
+      .from("requests")
+      .update({ locations: updatedLocations, status: allDone ? "completado" : "en_curso" })
+      .eq("id", request.id);
     if (error) setError(error.message);
   }
 
@@ -84,27 +88,82 @@ export default function TrabajadorDisponibles() {
         {mine.length > 0 && (
           <section className="mb-10">
             <h2 className="font-display text-xl font-semibold text-ink">Tus trabajos</h2>
-            <div className="mt-4 flex flex-col gap-3">
-              {mine.map((r) => (
-                <div key={r.id} className={cardBase}>
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
+            <div className="mt-4 flex flex-col gap-4">
+              {mine.map((r) => {
+                const nextIndex = r.locations.findIndex((l) => !l.completed_at);
+                return (
+                  <div key={r.id} className={cardBase}>
+                    <div className="flex items-start justify-between gap-4">
                       <p className="font-semibold text-ink">{r.service_name}</p>
-                      <p className="mt-1 text-xs text-ink-muted">
-                        {r.locations.map((l) => l.address).join(" · ")}
-                      </p>
+                      <span className="flex-shrink-0 font-data text-sm font-medium text-ink">
+                        ${r.price.toLocaleString("es-CL")}
+                      </span>
                     </div>
-                    <span className="flex-shrink-0 font-data text-sm font-medium text-ink">
-                      ${r.price.toLocaleString("es-CL")}
-                    </span>
+
+                    <div className="mt-4">
+                      <JobMap locations={r.locations} />
+                    </div>
+
+                    <ol className="mt-4 flex flex-col gap-3">
+                      {r.locations.map((loc, i) => {
+                        const isNext = i === nextIndex;
+                        const done = Boolean(loc.completed_at);
+                        return (
+                          <li
+                            key={loc.label}
+                            className={`rounded-md border p-3 ${
+                              done ? "border-line bg-surface-2" : isNext ? "border-action" : "border-line"
+                            }`}
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <div>
+                                <p className="text-sm font-medium text-ink">
+                                  {i + 1}. {loc.label}
+                                </p>
+                                <p className="mt-0.5 text-xs text-ink-muted">{loc.address}</p>
+                              </div>
+                              {done && (
+                                <span className="flex-shrink-0 text-xs font-semibold text-success">
+                                  ✓ Completado
+                                </span>
+                              )}
+                            </div>
+
+                            {!done && loc.lat != null && loc.lng != null && (
+                              <div className="mt-3 flex flex-wrap gap-2">
+                                <a
+                                  href={wazeUrl(loc.lat, loc.lng)}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className={`${btnSecondary} !min-h-0 !px-3 !py-1.5 !text-xs`}
+                                >
+                                  Abrir en Waze
+                                </a>
+                                <a
+                                  href={googleMapsUrl(loc.lat, loc.lng)}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className={`${btnSecondary} !min-h-0 !px-3 !py-1.5 !text-xs`}
+                                >
+                                  Abrir en Google Maps
+                                </a>
+                                {isNext && (
+                                  <button
+                                    className={`${btnPrimary} !min-h-0 !px-3 !py-1.5 !text-xs`}
+                                    onClick={() => completeLocation(r, i)}
+                                  >
+                                    Marcar completado
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                          </li>
+                        );
+                      })}
+                    </ol>
                   </div>
-                  {NEXT_LABEL[r.status] && (
-                    <button className={`${btnPrimary} mt-4`} onClick={() => advance(r)}>
-                      {NEXT_LABEL[r.status]}
-                    </button>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
           </section>
         )}

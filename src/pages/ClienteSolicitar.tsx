@@ -3,7 +3,10 @@ import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import type { Service, ServiceLocation } from "../lib/types";
 import { DEMO_CLIENT_NAME } from "../lib/demoUsers";
+import { LocationPicker, type LocationValue } from "../components/LocationPicker";
 import { btnPrimary, btnGhost, inputBase, cardBase } from "../lib/ui";
+
+const emptyLocation: LocationValue = { address: "", lat: null, lng: null };
 
 export default function ClienteSolicitar() {
   const navigate = useNavigate();
@@ -11,7 +14,7 @@ export default function ClienteSolicitar() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<Service | null>(null);
-  const [addresses, setAddresses] = useState<string[]>([]);
+  const [locationValues, setLocationValues] = useState<LocationValue[]>([]);
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -30,21 +33,31 @@ export default function ClienteSolicitar() {
 
   function selectService(service: Service) {
     setSelected(service);
-    setAddresses(service.location_labels.map(() => ""));
+    setLocationValues(service.location_labels.map(() => emptyLocation));
     setError(null);
+  }
+
+  function updateLocationValue(index: number, value: LocationValue) {
+    setLocationValues((prev) => prev.map((v, i) => (i === index ? value : v)));
   }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!selected) return;
 
-    const locations: ServiceLocation[] = selected.location_labels.map((label, i) => ({
-      label,
-      address: addresses[i]?.trim() ?? "",
-    }));
+    const locations: ServiceLocation[] = selected.location_labels.map((label, i) => {
+      const v = locationValues[i] ?? emptyLocation;
+      return {
+        label,
+        address: v.address.trim(),
+        lat: v.lat,
+        lng: v.lng,
+        completed_at: null,
+      };
+    });
 
-    if (locations.some((l) => !l.address)) {
-      setError("Completa todas las direcciones.");
+    if (locations.some((l) => !l.address || l.lat == null || l.lng == null)) {
+      setError("Completa todas las direcciones buscándolas o marcando el punto en el mapa.");
       return;
     }
 
@@ -130,23 +143,15 @@ export default function ClienteSolicitar() {
               ← Elegir otro servicio
             </button>
 
-            <div className="mt-4 flex flex-col gap-4">
+            <div className="mt-4 flex flex-col gap-6">
               {selected.location_labels.map((label, i) => (
-                <div key={i} className="flex flex-col gap-1.5">
-                  <label htmlFor={`addr-${i}`} className="text-sm font-medium text-ink-muted">
-                    {label}
-                  </label>
-                  <input
-                    id={`addr-${i}`}
-                    className={inputBase}
-                    value={addresses[i] ?? ""}
-                    onChange={(e) =>
-                      setAddresses((a) => a.map((v, idx) => (idx === i ? e.target.value : v)))
-                    }
-                    placeholder="Comuna, calle y número"
-                    required
-                  />
-                </div>
+                <LocationPicker
+                  key={i}
+                  id={`addr-${i}`}
+                  label={label}
+                  value={locationValues[i] ?? emptyLocation}
+                  onChange={(v) => updateLocationValue(i, v)}
+                />
               ))}
 
               <div className="flex flex-col gap-1.5">

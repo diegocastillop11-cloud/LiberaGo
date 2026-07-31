@@ -8,6 +8,9 @@ export type RequestStatus =
 export type ServiceLocation = {
   label: string;
   address: string;
+  lat: number | null;
+  lng: number | null;
+  completed_at: string | null;
 };
 
 export type Service = {

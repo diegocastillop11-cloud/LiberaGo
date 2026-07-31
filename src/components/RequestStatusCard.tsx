@@ -106,9 +106,21 @@ export function RequestStatusCard({ request }: { request: ServiceRequest }) {
 
       <div className="mt-5 flex flex-col gap-0">
         {request.locations.map((loc) => (
-          <div key={loc.label} className="flex justify-between gap-4 border-b border-line py-2.5 text-sm last:border-0">
+          <div
+            key={loc.label}
+            className="flex items-start justify-between gap-4 border-b border-line py-2.5 text-sm last:border-0"
+          >
             <span className="text-ink-muted">{loc.label}</span>
-            <span className="text-right text-ink">{loc.address}</span>
+            <span className="text-right">
+              <span className="block text-ink">{loc.address}</span>
+              <span
+                className={`mt-0.5 inline-block text-xs font-medium ${
+                  loc.completed_at ? "text-success" : "text-ink-muted"
+                }`}
+              >
+                {loc.completed_at ? "✓ Completado" : "Pendiente"}
+              </span>
+            </span>
           </div>
         ))}
         <div className="flex justify-between gap-4 py-2.5 text-sm">

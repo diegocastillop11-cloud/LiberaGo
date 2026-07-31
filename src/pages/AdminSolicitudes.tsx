@@ -182,7 +182,9 @@ export default function AdminSolicitudes() {
                 </div>
 
                 <p className="mt-2 text-xs text-ink-muted">
-                  {r.locations.map((l) => `${l.label}: ${l.address}`).join(" · ")}
+                  {r.locations.length > 0
+                    ? r.locations.map((l) => `${l.label}: ${l.address}`).join(" · ")
+                    : "Servicio remoto (sin dirección)"}
                 </p>
 
                 {r.notes && <p className="mt-1 text-xs text-ink-muted">"{r.notes}"</p>}

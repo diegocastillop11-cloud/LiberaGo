@@ -45,7 +45,7 @@ export default function AdminServices() {
       name: service.name,
       description: service.description ?? "",
       price: String(service.price),
-      locationLabels: service.location_labels.length > 0 ? service.location_labels : [""],
+      locationLabels: service.location_labels,
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -77,8 +77,8 @@ export default function AdminServices() {
     const price = Number(form.price);
     const locationLabels = form.locationLabels.map((l) => l.trim()).filter(Boolean);
 
-    if (!form.name.trim() || !Number.isFinite(price) || price < 0 || locationLabels.length === 0) {
-      setError("Completa nombre, precio válido y al menos una dirección.");
+    if (!form.name.trim() || !Number.isFinite(price) || price < 0) {
+      setError("Completa nombre y un precio válido.");
       return;
     }
 
@@ -206,7 +206,8 @@ export default function AdminServices() {
             <p className="mt-1 text-pretty text-xs text-ink-muted">
               La mayoría necesita solo una. Servicios con varias paradas (ej. revisión
               técnica) pueden pedir "Retiro del vehículo", "Lugar de la revisión",
-              "Entrega".
+              "Entrega". Si el servicio no es presencial (ej. una fila virtual), quítalas
+              todas — no se pedirá ninguna dirección.
             </p>
             <div className="mt-3 flex flex-col gap-2">
               {form.locationLabels.map((label, i) => (
@@ -217,18 +218,19 @@ export default function AdminServices() {
                     onChange={(e) => updateLocationLabel(i, e.target.value)}
                     placeholder={`Etiqueta ${i + 1}, ej. "Dirección del servicio"`}
                   />
-                  {form.locationLabels.length > 1 && (
-                    <button
-                      type="button"
-                      className={btnGhost}
-                      onClick={() => removeLocationLabel(i)}
-                      aria-label={`Quitar dirección ${i + 1}`}
-                    >
-                      Quitar
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    className={btnGhost}
+                    onClick={() => removeLocationLabel(i)}
+                    aria-label={`Quitar dirección ${i + 1}`}
+                  >
+                    Quitar
+                  </button>
                 </div>
               ))}
+              {form.locationLabels.length === 0 && (
+                <p className="text-xs text-ink-muted">Sin direcciones — servicio remoto.</p>
+              )}
             </div>
             <button type="button" className={`${btnGhost} mt-2 !justify-start !px-0`} onClick={addLocationLabel}>
               + Agregar otra dirección
@@ -272,7 +274,9 @@ export default function AdminServices() {
                     ${service.price.toLocaleString("es-CL")}
                   </p>
                   <p className="mt-1 text-xs text-ink-muted">
-                    {service.location_labels.join(" · ")}
+                    {service.location_labels.length > 0
+                      ? service.location_labels.join(" · ")
+                      : "Servicio remoto (sin dirección)"}
                   </p>
                 </div>
                 <div className="flex flex-shrink-0 flex-col gap-2 sm:flex-row">

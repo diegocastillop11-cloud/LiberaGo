@@ -63,6 +63,14 @@ export default function TrabajadorDisponibles() {
     if (error) setError(error.message);
   }
 
+  async function completeRequest(request: ServiceRequest) {
+    const { error } = await supabase
+      .from("requests")
+      .update({ status: "completado" })
+      .eq("id", request.id);
+    if (error) setError(error.message);
+  }
+
   async function completeLocation(request: ServiceRequest, index: number) {
     const updatedLocations = request.locations.map((loc, i) =>
       i === index ? { ...loc, completed_at: new Date().toISOString() } : loc,
@@ -101,9 +109,17 @@ export default function TrabajadorDisponibles() {
                       </span>
                     </div>
 
-                    <div className="mt-4">
-                      <JobMap locations={r.locations} />
-                    </div>
+                    {r.locations.length === 0 ? (
+                      <div className="mt-4">
+                        <button className={btnPrimary} onClick={() => completeRequest(r)}>
+                          Marcar completado
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="mt-4">
+                        <JobMap locations={r.locations} />
+                      </div>
+                    )}
 
                     <ol className="mt-4 flex flex-col gap-3">
                       {r.locations.map((loc, i) => {

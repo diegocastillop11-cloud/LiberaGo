@@ -1,6 +1,7 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/AuthContext";
+import type { Profile } from "../lib/types";
 import { btnPrimary, btnSecondary, inputBase } from "../lib/ui";
 
 const MIN_PASSWORD_LENGTH = 8;
@@ -13,9 +14,15 @@ function friendlyError(message: string): string {
   return message;
 }
 
+function destinationFor(profile: Profile): string {
+  if (profile.is_admin) return "/admin";
+  if (profile.worker_status === "approved") return "/trabajador";
+  return "/cliente";
+}
+
 export default function Login() {
   const navigate = useNavigate();
-  const { signInWithGoogle, signInWithPassword, signUpWithPassword } = useAuth();
+  const { session, profile, loading, signInWithGoogle, signInWithPassword, signUpWithPassword } = useAuth();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [signupAs, setSignupAs] = useState<"cliente" | "trabajador">("cliente");
   const [email, setEmail] = useState("");
@@ -74,10 +81,15 @@ export default function Login() {
       );
       setPassword("");
       setConfirmPassword("");
-    } else {
-      navigate("/");
     }
+    // Si fue "signin", el useEffect de abajo redirige apenas el perfil cargue.
   }
+
+  useEffect(() => {
+    if (mode === "signin" && !loading && session && profile) {
+      navigate(destinationFor(profile), { replace: true });
+    }
+  }, [mode, loading, session, profile, navigate]);
 
   function handleGoogleClick() {
     if (mode === "signup" && signupAs === "trabajador") {

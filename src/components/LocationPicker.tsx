@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import { searchAddress, reverseGeocode, type GeocodeResult } from "../lib/geocoding";
 import { useDebouncedValue } from "../hooks/useDebouncedValue";
-import { inputBase } from "../lib/ui";
+import { btnPrimary, btnGhost, inputBase } from "../lib/ui";
 
 const SANTIAGO: [number, number] = [-33.4489, -70.6693];
 
@@ -23,17 +23,18 @@ export function LocationPicker({
   value: LocationValue;
   onChange: (value: LocationValue) => void;
 }) {
+  const isConfirmed = value.lat != null && value.lng != null;
+  const [editing, setEditing] = useState(!isConfirmed);
   const [query, setQuery] = useState(value.address);
   const [results, setResults] = useState<GeocodeResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [pending, setPending] = useState<GeocodeResult | null>(null);
   const debouncedQuery = useDebouncedValue(query, 450);
 
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
-  const onChangeRef = useRef(onChange);
-  onChangeRef.current = onChange;
 
   function placeMarker(map: L.Map, lat: number, lng: number) {
     if (markerRef.current) {
@@ -45,11 +46,11 @@ export function LocationPicker({
   }
 
   useEffect(() => {
-    if (!mapRef.current || mapInstance.current) return;
-    const initial = value.lat != null && value.lng != null ? [value.lat, value.lng] : SANTIAGO;
+    if (!editing || !mapRef.current || mapInstance.current) return;
+    const initial = isConfirmed ? [value.lat as number, value.lng as number] : SANTIAGO;
     const map = L.map(mapRef.current, {
       center: initial as [number, number],
-      zoom: value.lat != null && value.lng != null ? 16 : 12,
+      zoom: isConfirmed ? 16 : 12,
     });
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
@@ -59,17 +60,17 @@ export function LocationPicker({
     map.on("click", async (e: L.LeafletMouseEvent) => {
       const { lat, lng } = e.latlng;
       placeMarker(map, lat, lng);
+      setPending({ address: "Buscando dirección…", lat, lng });
       try {
         const address = await reverseGeocode(lat, lng);
-        setQuery(address);
-        onChangeRef.current({ address, lat, lng });
+        setPending({ address, lat, lng });
       } catch {
-        onChangeRef.current({ address: "", lat, lng });
+        setPending({ address: `${lat.toFixed(5)}, ${lng.toFixed(5)}`, lat, lng });
       }
     });
 
-    if (value.lat != null && value.lng != null) {
-      placeMarker(map, value.lat, value.lng);
+    if (isConfirmed) {
+      placeMarker(map, value.lat as number, value.lng as number);
     }
 
     mapInstance.current = map;
@@ -80,7 +81,7 @@ export function LocationPicker({
       markerRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [editing]);
 
   useEffect(() => {
     if (debouncedQuery.trim().length < 3 || debouncedQuery === value.address) {
@@ -103,12 +104,49 @@ export function LocationPicker({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedQuery]);
 
-  function selectResult(result: GeocodeResult) {
+  function pickResult(result: GeocodeResult) {
     setQuery(result.address);
     setShowResults(false);
     setResults([]);
-    onChange(result);
+    setPending(result);
     if (mapInstance.current) placeMarker(mapInstance.current, result.lat, result.lng);
+  }
+
+  function confirm() {
+    if (!pending) return;
+    onChange(pending);
+    setPending(null);
+    setEditing(false);
+  }
+
+  function cancelPending() {
+    setPending(null);
+    if (mapInstance.current && isConfirmed) {
+      placeMarker(mapInstance.current, value.lat as number, value.lng as number);
+    } else if (markerRef.current && mapInstance.current) {
+      mapInstance.current.removeLayer(markerRef.current);
+      markerRef.current = null;
+    }
+  }
+
+  function startEditing() {
+    setQuery(value.address);
+    setPending(null);
+    setEditing(true);
+  }
+
+  if (!editing && isConfirmed) {
+    return (
+      <div className="flex flex-col gap-1.5">
+        <span className="text-sm font-medium text-ink-muted">{label}</span>
+        <div className="flex items-center justify-between gap-3 rounded-sm border border-line bg-surface-2 px-3.5 py-2.5">
+          <span className="text-sm text-ink">✓ {value.address}</span>
+          <button type="button" className={`${btnGhost} !min-h-0 !px-2 !py-1 !text-xs`} onClick={startEditing}>
+            Cambiar
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -116,7 +154,8 @@ export function LocationPicker({
       <label htmlFor={id} className="text-sm font-medium text-ink-muted">
         {label}
       </label>
-      <div className="relative">
+
+      <div className="relative z-10">
         <input
           id={id}
           className={inputBase}
@@ -126,7 +165,6 @@ export function LocationPicker({
           onBlur={() => window.setTimeout(() => setShowResults(false), 150)}
           placeholder="Busca la dirección…"
           autoComplete="off"
-          required
         />
         {searching && (
           <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-ink-muted">
@@ -134,14 +172,14 @@ export function LocationPicker({
           </span>
         )}
         {showResults && results.length > 0 && (
-          <ul className="absolute z-20 mt-1 max-h-56 w-full overflow-auto rounded-sm border border-line bg-surface shadow-lg">
+          <ul className="absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-sm border border-line bg-surface shadow-lg">
             {results.map((r, i) => (
               <li key={i}>
                 <button
                   type="button"
                   className="block w-full px-3.5 py-2.5 text-left text-sm text-ink hover:bg-surface-2"
                   onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => selectResult(r)}
+                  onClick={() => pickResult(r)}
                 >
                   {r.address}
                 </button>
@@ -150,15 +188,35 @@ export function LocationPicker({
           </ul>
         )}
       </div>
+
       <div
         ref={mapRef}
-        className="h-[200px] w-full overflow-hidden rounded-sm border border-line"
+        className="relative z-0 h-[200px] w-full overflow-hidden rounded-sm border border-line"
         role="img"
         aria-label={`Mapa para elegir ${label.toLowerCase()}`}
       />
-      <p className="text-xs text-ink-muted">
-        Busca arriba o haz clic en el mapa para marcar el punto exacto.
-      </p>
+
+      {pending ? (
+        <div className="flex flex-col gap-2 rounded-sm border border-action bg-action/10 p-3">
+          <p className="text-sm text-ink">📍 {pending.address}</p>
+          <div className="flex gap-2">
+            <button type="button" className={`${btnPrimary} !min-h-0 !px-3 !py-1.5 !text-xs`} onClick={confirm}>
+              Confirmar dirección
+            </button>
+            <button
+              type="button"
+              className={`${btnGhost} !min-h-0 !px-3 !py-1.5 !text-xs`}
+              onClick={cancelPending}
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      ) : (
+        <p className="text-xs text-ink-muted">
+          Busca arriba o haz clic en el mapa, luego confirma el punto exacto.
+        </p>
+      )}
     </div>
   );
 }

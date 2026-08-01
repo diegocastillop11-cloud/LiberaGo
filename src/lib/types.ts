@@ -15,7 +15,8 @@ export type RequestStatus =
   | "asignado"
   | "en_curso"
   | "completado"
-  | "cancelado";
+  | "cancelado"
+  | "no_completado";
 
 export type ServiceLocation = {
   label: string;
@@ -59,6 +60,7 @@ export type ServiceRequest = {
   worker_notes: WorkerNote[];
   status: RequestStatus;
   notes: string | null;
+  failure_reason: string | null;
   offered_to: string | null;
   offer_expires_at: string | null;
   created_at: string;

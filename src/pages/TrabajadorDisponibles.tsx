@@ -4,7 +4,7 @@ import { useAuth } from "../lib/AuthContext";
 import type { ServiceRequest } from "../lib/types";
 import { JobMap } from "../components/JobMap";
 import { AppHeader } from "../components/AppHeader";
-import { btnGhost, btnPrimary, btnSecondary, cardBase, inputBase } from "../lib/ui";
+import { btnDanger, btnGhost, btnPrimary, btnSecondary, cardBase, inputBase } from "../lib/ui";
 import { isPushSubscribed, subscribeToPush } from "../lib/push";
 
 function wazeUrl(lat: number, lng: number) {
@@ -117,6 +117,16 @@ export default function TrabajadorDisponibles() {
     if (error) setError(error.message);
   }
 
+  async function markFailed(request: ServiceRequest) {
+    const reason = window.prompt("¿Por qué no se pudo completar? (se le va a mostrar al cliente)");
+    if (reason === null) return;
+    const { error } = await supabase
+      .from("requests")
+      .update({ status: "no_completado", failure_reason: reason.trim() || null })
+      .eq("id", request.id);
+    if (error) setError(error.message);
+  }
+
   async function addNote(request: ServiceRequest) {
     const text = (noteDrafts[request.id] ?? "").trim();
     if (!text) return;
@@ -200,6 +210,15 @@ export default function TrabajadorDisponibles() {
                         </>
                       )}
                     </p>
+
+                    <div className="mt-3">
+                      <button
+                        className={`${btnDanger} !min-h-0 !px-3 !py-1.5 !text-xs`}
+                        onClick={() => markFailed(r)}
+                      >
+                        No se pudo completar
+                      </button>
+                    </div>
 
                     {r.locations.length === 0 ? (
                       <div className="mt-4 flex gap-2">

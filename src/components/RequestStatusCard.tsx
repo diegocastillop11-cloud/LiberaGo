@@ -19,6 +19,22 @@ export function RequestStatusCard({ request }: { request: ServiceRequest }) {
     );
   }
 
+  if (request.status === "no_completado") {
+    return (
+      <div className="rounded-lg border border-line bg-surface p-6">
+        <p className="font-display text-lg font-semibold text-ink">{request.service_name}</p>
+        <p className="mt-2 text-sm text-error">No se pudo completar esta solicitud.</p>
+        {request.failure_reason && (
+          <p className="mt-1 text-sm text-ink-muted">Motivo: "{request.failure_reason}"</p>
+        )}
+        <p className="mt-2 text-xs text-ink-muted">
+          Según nuestros Términos y Condiciones, esto da derecho a un reembolso del 50% del pago.
+        </p>
+        <WorkerNotes request={request} />
+      </div>
+    );
+  }
+
   const currentIndex = STEP_ORDER.indexOf(request.status as (typeof STEP_ORDER)[number]);
 
   return (

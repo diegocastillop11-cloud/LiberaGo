@@ -12,6 +12,7 @@ const STATUS_LABELS: Record<RequestStatus, string> = {
   en_curso: "En curso",
   completado: "Completado",
   cancelado: "Cancelado",
+  no_completado: "No completado",
 };
 
 const STATUS_PILL: Record<RequestStatus, string> = {
@@ -20,6 +21,7 @@ const STATUS_PILL: Record<RequestStatus, string> = {
   en_curso: "bg-action/15 text-action-ink",
   completado: "bg-success/15 text-success",
   cancelado: "bg-error/15 text-error",
+  no_completado: "bg-error/15 text-error",
 };
 
 export default function ClienteSolicitudes() {

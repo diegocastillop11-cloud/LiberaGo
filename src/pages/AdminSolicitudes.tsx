@@ -11,6 +11,7 @@ const STATUS_LABELS: Record<RequestStatus, string> = {
   en_curso: "En curso",
   completado: "Completado",
   cancelado: "Cancelado",
+  no_completado: "No completado",
 };
 
 const STATUS_PILL: Record<RequestStatus, string> = {
@@ -19,6 +20,7 @@ const STATUS_PILL: Record<RequestStatus, string> = {
   en_curso: "bg-action/15 text-action-ink",
   completado: "bg-success/15 text-success",
   cancelado: "bg-error/15 text-error",
+  no_completado: "bg-error/15 text-error",
 };
 
 const FILTERS: Array<{ key: "todas" | RequestStatus; label: string }> = [
@@ -28,6 +30,7 @@ const FILTERS: Array<{ key: "todas" | RequestStatus; label: string }> = [
   { key: "en_curso", label: "En curso" },
   { key: "completado", label: "Completado" },
   { key: "cancelado", label: "Cancelado" },
+  { key: "no_completado", label: "No completado" },
 ];
 
 export default function AdminSolicitudes() {
@@ -70,6 +73,16 @@ export default function AdminSolicitudes() {
   async function cancelRequest(r: ServiceRequest) {
     if (!window.confirm(`¿Cancelar la solicitud de "${r.client_name}"? No se puede deshacer.`)) return;
     const { error } = await supabase.from("requests").update({ status: "cancelado" }).eq("id", r.id);
+    if (error) setError(error.message);
+  }
+
+  async function markFailed(r: ServiceRequest) {
+    const reason = window.prompt("¿Por qué no se pudo completar? (se le va a mostrar al cliente)");
+    if (reason === null) return;
+    const { error } = await supabase
+      .from("requests")
+      .update({ status: "no_completado", failure_reason: reason.trim() || null })
+      .eq("id", r.id);
     if (error) setError(error.message);
   }
 
@@ -200,6 +213,9 @@ export default function AdminSolicitudes() {
                 </p>
 
                 {r.notes && <p className="mt-1 text-xs text-ink-muted">Cliente: "{r.notes}"</p>}
+                {r.failure_reason && (
+                  <p className="mt-1 text-xs text-error">No completado: "{r.failure_reason}"</p>
+                )}
                 {r.worker_notes.length > 0 && (
                   <div className="mt-1 flex flex-col gap-0.5">
                     {r.worker_notes.map((note, i) => (
@@ -210,7 +226,7 @@ export default function AdminSolicitudes() {
                   </div>
                 )}
 
-                {r.status !== "completado" && r.status !== "cancelado" && (
+                {r.status !== "completado" && r.status !== "cancelado" && r.status !== "no_completado" && (
                   <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-line pt-4">
                     <label htmlFor={`worker-${r.id}`} className="text-xs font-medium text-ink-muted">
                       Reasignar a
@@ -230,6 +246,12 @@ export default function AdminSolicitudes() {
                     </select>
                     <button className={`${btnDanger} !min-h-0 !px-3 !py-1.5 !text-xs`} onClick={() => cancelRequest(r)}>
                       Cancelar solicitud
+                    </button>
+                    <button
+                      className={`${btnDanger} !min-h-0 !px-3 !py-1.5 !text-xs`}
+                      onClick={() => markFailed(r)}
+                    >
+                      Marcar no completada
                     </button>
                   </div>
                 )}

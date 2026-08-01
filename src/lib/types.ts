@@ -59,6 +59,8 @@ export type ServiceRequest = {
   worker_notes: WorkerNote[];
   status: RequestStatus;
   notes: string | null;
+  offered_to: string | null;
+  offer_expires_at: string | null;
   created_at: string;
   updated_at: string;
 };

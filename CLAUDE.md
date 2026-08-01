@@ -92,6 +92,21 @@ fail-fast con mensaje claro, no un error críptico downstream.
 En Vercel, las env vars de **preview están escopeadas por rama** — cada rama
 nueva sale "en negro" hasta agregarlas a mano para esa rama en Project
 Settings > Environment Variables.
+
+### Variables opcionales — notificaciones push + despacho secuencial (2026-08-01)
+Sin estas, la app funciona igual que antes (nadie se rompe) — solo no se
+activa el push ni el salto automático de 10s entre trabajadores.
+```
+VAPID_PUBLIC_KEY / VITE_VAPID_PUBLIC_KEY   # mismo valor, par de llaves autogenerado (web-push), no requiere cuenta
+VAPID_PRIVATE_KEY                          # secreta, solo backend
+WEBHOOK_SECRET                             # secreto compartido para el Database Webhook de Supabase (ver abajo)
+QSTASH_TOKEN                               # cuenta gratis en upstash.com > QStash
+QSTASH_CURRENT_SIGNING_KEY / QSTASH_NEXT_SIGNING_KEY  # idem, para verificar la firma del callback
+```
+Falta además crear a mano en Supabase Dashboard → Database → Webhooks un
+webhook `INSERT` sobre `requests` que llame a
+`https://<dominio>/api/webhooks/request-created` con el header
+`x-liberago-webhook-secret: <WEBHOOK_SECRET>`.
 ## Reglas generales
 1. Leer archivos antes de escribir código.
 2. Preferir edición sobre reescritura completa.

@@ -5,6 +5,7 @@ import type { ServiceRequest } from "../lib/types";
 import { JobMap } from "../components/JobMap";
 import { AppHeader } from "../components/AppHeader";
 import { btnGhost, btnPrimary, btnSecondary, cardBase, inputBase } from "../lib/ui";
+import { isPushSubscribed, subscribeToPush } from "../lib/push";
 
 function wazeUrl(lat: number, lng: number) {
   return `https://waze.com/ul?ll=${lat},${lng}&navigate=yes`;
@@ -21,6 +22,42 @@ export default function TrabajadorDisponibles() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
+  const [pushSubscribed, setPushSubscribed] = useState(false);
+  const [pushError, setPushError] = useState<string | null>(null);
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    isPushSubscribed().then(setPushSubscribed);
+  }, []);
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  async function enableNotifications() {
+    const result = await subscribeToPush();
+    if (result.ok) {
+      setPushSubscribed(true);
+      setPushError(null);
+    } else {
+      setPushError(result.reason ?? "No se pudo activar las notificaciones.");
+    }
+  }
+
+  async function skip(request: ServiceRequest) {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData.session?.access_token;
+    if (!token) return;
+    const res = await fetch(`/api/requests/${request.id}/skip`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      setError(body?.error ?? "No se pudo saltar la solicitud.");
+    }
+  }
 
   async function loadData() {
     if (!user) return;
@@ -115,6 +152,21 @@ export default function TrabajadorDisponibles() {
         {error && (
           <div className="mb-6 rounded-sm border border-error bg-error/10 px-4 py-3 text-sm text-error">
             {error}
+          </div>
+        )}
+
+        {!pushSubscribed && (
+          <div className={`${cardBase} mb-6 flex items-center justify-between gap-4`}>
+            <div>
+              <p className="text-sm font-semibold text-ink">Activa las notificaciones</p>
+              <p className="mt-0.5 text-xs text-ink-muted">
+                Te avisamos apenas te toque un turno para aceptar una solicitud.
+              </p>
+              {pushError && <p className="mt-1 text-xs text-error">{pushError}</p>}
+            </div>
+            <button className={`${btnPrimary} flex-shrink-0`} onClick={enableNotifications}>
+              Activar
+            </button>
           </div>
         )}
 
@@ -273,28 +325,49 @@ export default function TrabajadorDisponibles() {
             <p className="mt-4 text-sm text-ink-muted">No hay solicitudes disponibles ahora.</p>
           ) : (
             <div className="mt-4 flex flex-col gap-3">
-              {available.map((r) => (
-                <div key={r.id} className={cardBase}>
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <p className="font-semibold text-ink">{r.service_name}</p>
-                      <p className="mt-1 text-xs text-ink-muted">
-                        {r.locations.map((l) => `${l.label}: ${l.address}`).join(" · ")}
-                      </p>
-                      {r.notes && <p className="mt-1 text-xs text-ink-muted">"{r.notes}"</p>}
+              {available.map((r) => {
+                const isExclusive = r.offered_to === user?.id;
+                const remaining = r.offer_expires_at
+                  ? Math.max(0, Math.ceil((new Date(r.offer_expires_at).getTime() - now) / 1000))
+                  : null;
+                return (
+                  <div
+                    key={r.id}
+                    className={`${cardBase} ${isExclusive ? "!border-action" : ""}`}
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="font-semibold text-ink">{r.service_name}</p>
+                        <p className="mt-1 text-xs text-ink-muted">
+                          {r.locations.map((l) => `${l.label}: ${l.address}`).join(" · ")}
+                        </p>
+                        {r.notes && <p className="mt-1 text-xs text-ink-muted">"{r.notes}"</p>}
+                      </div>
+                      <span className="flex-shrink-0 font-data text-sm font-medium text-ink">
+                        ${r.price.toLocaleString("es-CL")}
+                        {r.distance_km != null && ` (~${r.distance_km} km)`}
+                      </span>
                     </div>
-                    <span className="flex-shrink-0 font-data text-sm font-medium text-ink">
-                      ${r.price.toLocaleString("es-CL")}
-                      {r.distance_km != null && ` (~${r.distance_km} km)`}
-                    </span>
+
+                    {isExclusive && remaining != null && (
+                      <p className="mt-2 text-xs font-semibold text-action-ink">
+                        Oferta exclusiva para ti — {remaining}s para responder
+                      </p>
+                    )}
+
+                    <div className="mt-4 flex gap-2">
+                      <button className={btnPrimary} onClick={() => accept(r)}>
+                        Aceptar
+                      </button>
+                      {isExclusive && (
+                        <button className={btnGhost} onClick={() => skip(r)}>
+                          Saltar
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <div className="mt-4">
-                    <button className={btnPrimary} onClick={() => accept(r)}>
-                      Aceptar
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </section>

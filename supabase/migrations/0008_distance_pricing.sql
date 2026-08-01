@@ -7,17 +7,28 @@
 -- este trigger de insert, no confia en lo que mande el cliente — el
 -- frontend solo muestra una estimacion con la misma formula.
 
-alter table services add column pricing_type text not null default 'fixed'
+alter table services add column if not exists pricing_type text not null default 'fixed'
   check (pricing_type in ('fixed', 'distance'));
-alter table services add column price_per_km integer
+alter table services add column if not exists price_per_km integer
   check (price_per_km is null or price_per_km >= 0);
-alter table services add constraint services_price_per_km_required
-  check (pricing_type = 'fixed' or price_per_km is not null);
 
-alter table requests add column distance_km numeric;
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'services_price_per_km_required'
+  ) then
+    alter table services add constraint services_price_per_km_required
+      check (pricing_type = 'fixed' or price_per_km is not null);
+  end if;
+end;
+$$;
+
+alter table requests add column if not exists distance_km numeric;
 
 -- available_requests() ya existia (0007) pero no conocia distance_km todavia.
-create or replace function public.available_requests()
+-- Postgres no deja cambiar el tipo de retorno con CREATE OR REPLACE.
+drop function if exists public.available_requests();
+create function public.available_requests()
 returns table (
   id uuid,
   service_id uuid,

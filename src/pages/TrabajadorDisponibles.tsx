@@ -130,6 +130,7 @@ export default function TrabajadorDisponibles() {
                       <p className="font-semibold text-ink">{r.service_name}</p>
                       <span className="flex-shrink-0 font-data text-sm font-medium text-ink">
                         ${r.price.toLocaleString("es-CL")}
+                        {r.distance_km != null && ` (~${r.distance_km} km)`}
                       </span>
                     </div>
 
@@ -284,6 +285,7 @@ export default function TrabajadorDisponibles() {
                     </div>
                     <span className="flex-shrink-0 font-data text-sm font-medium text-ink">
                       ${r.price.toLocaleString("es-CL")}
+                      {r.distance_km != null && ` (~${r.distance_km} km)`}
                     </span>
                   </div>
                   <div className="mt-4">

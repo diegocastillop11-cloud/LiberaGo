@@ -167,6 +167,7 @@ export default function AdminSolicitudes() {
                     </span>
                     <span className="font-data text-sm font-medium text-ink">
                       ${r.price.toLocaleString("es-CL")}
+                      {r.distance_km != null && ` (~${r.distance_km} km)`}
                     </span>
                   </div>
                 </div>

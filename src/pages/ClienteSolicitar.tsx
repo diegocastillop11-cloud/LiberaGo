@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../lib/AuthContext";
@@ -6,6 +6,7 @@ import type { Service, ServiceLocation } from "../lib/types";
 import { LocationPicker, type LocationValue } from "../components/LocationPicker";
 import { AppHeader } from "../components/AppHeader";
 import { btnPrimary, btnGhost, inputBase, cardBase } from "../lib/ui";
+import { haversineKm } from "../lib/geo";
 
 const emptyLocation: LocationValue = { address: "", lat: null, lng: null };
 
@@ -44,6 +45,19 @@ export default function ClienteSolicitar() {
     setLocationValues((prev) => prev.map((v, i) => (i === index ? value : v)));
   }
 
+  const estimate = useMemo(() => {
+    if (!selected) return null;
+    if (selected.pricing_type !== "distance") return { price: selected.price, km: null as number | null };
+
+    const a = locationValues[0];
+    const b = locationValues[1];
+    if (!a || !b || a.lat == null || a.lng == null || b.lat == null || b.lng == null) {
+      return { price: null as number | null, km: null as number | null };
+    }
+    const km = haversineKm(a.lat, a.lng, b.lat, b.lng);
+    return { price: selected.price + Math.round(km * (selected.price_per_km ?? 0)), km };
+  }, [selected, locationValues]);
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!selected || !user) return;
@@ -75,7 +89,7 @@ export default function ClienteSolicitar() {
       .insert({
         service_id: selected.id,
         service_name: selected.name,
-        price: selected.price,
+        price: estimate?.price ?? selected.price,
         locations,
         client_id: user.id,
         client_name: profile?.full_name ?? profile?.email ?? "Cliente",
@@ -135,6 +149,8 @@ export default function ClienteSolicitar() {
                   </div>
                   <span className="flex-shrink-0 font-data text-sm font-medium text-ink">
                     ${service.price.toLocaleString("es-CL")}
+                    {service.pricing_type === "distance" &&
+                      ` + $${(service.price_per_km ?? 0).toLocaleString("es-CL")}/km`}
                   </span>
                 </button>
               ))}
@@ -195,7 +211,12 @@ export default function ClienteSolicitar() {
 
             <div className="mt-6 flex items-center justify-between">
               <span className="font-data text-lg font-semibold text-ink">
-                ${selected.price.toLocaleString("es-CL")}
+                {estimate?.price != null ? `$${estimate.price.toLocaleString("es-CL")}` : "Falta la ruta"}
+                {estimate?.km != null && (
+                  <span className="ml-2 text-sm font-normal text-ink-muted">
+                    (~{estimate.km.toFixed(1)} km)
+                  </span>
+                )}
               </span>
               <button type="submit" className={btnPrimary} disabled={submitting}>
                 {submitting ? "Enviando…" : "Confirmar solicitud"}

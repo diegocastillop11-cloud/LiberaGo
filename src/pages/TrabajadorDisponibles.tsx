@@ -25,7 +25,7 @@ export default function TrabajadorDisponibles() {
   async function loadData() {
     if (!user) return;
     const [{ data: solicitadas }, { data: propias }] = await Promise.all([
-      supabase.from("requests").select("*").eq("status", "solicitado").order("created_at"),
+      supabase.rpc("available_requests"),
       supabase
         .from("requests")
         .select("*")

@@ -211,6 +211,22 @@ function PendingPaymentCard({ request }: { request: ServiceRequest }) {
   const [autoStatus, setAutoStatus] = useState<"redirecting" | "idle">(justCreated ? "redirecting" : "idle");
   const [autoError, setAutoError] = useState<string | null>(null);
 
+  // El "redirecting" de arriba dispara un window.location.href real hacia
+  // MercadoPago (otro origen). Si el cliente vuelve con el botón atrás, el
+  // navegador puede restaurar esta página desde bfcache tal cual quedó
+  // congelada justo antes de irse — con autoStatus todavía en "redirecting"
+  // para siempre, sin que el efecto de abajo se vuelva a ejecutar (reportado
+  // 2026-08-02: quedaba pegado en "Te estamos redirigiendo…" sin poder
+  // cancelar ni reintentar). pageshow con persisted=true es la señal
+  // estándar de que la página viene de esa caché, no de una carga nueva.
+  useEffect(() => {
+    function handlePageShow(event: PageTransitionEvent) {
+      if (event.persisted) setAutoStatus("idle");
+    }
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, []);
+
   useEffect(() => {
     if (autoStatus !== "redirecting") return;
     let cancelled = false;

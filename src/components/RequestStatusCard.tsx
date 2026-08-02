@@ -1,4 +1,7 @@
+import { useState } from "react";
+import { supabase } from "../lib/supabase";
 import type { ServiceRequest } from "../lib/types";
+import { btnPrimary } from "../lib/ui";
 
 const STEP_ORDER = ["solicitado", "asignado", "en_curso", "completado"] as const;
 const STEP_LABELS: Record<(typeof STEP_ORDER)[number], string> = {
@@ -9,6 +12,19 @@ const STEP_LABELS: Record<(typeof STEP_ORDER)[number], string> = {
 };
 
 export function RequestStatusCard({ request }: { request: ServiceRequest }) {
+  if (request.status === "pendiente_pago") {
+    return (
+      <div className="rounded-lg border border-line bg-surface p-6">
+        <p className="font-display text-lg font-semibold text-ink">{request.service_name}</p>
+        <p className="mt-2 text-sm text-ink-muted">
+          Todavía no se confirma el pago de esta solicitud — no se le ofrece a ningún trabajador hasta
+          que se complete.
+        </p>
+        <RetryPaymentButton requestId={request.id} />
+      </div>
+    );
+  }
+
   if (request.status === "cancelado") {
     return (
       <div className="rounded-lg border border-line bg-surface p-6">
@@ -153,6 +169,45 @@ export function RequestStatusCard({ request }: { request: ServiceRequest }) {
           <span className="font-data font-medium text-ink">${request.price.toLocaleString("es-CL")}</span>
         </div>
       </div>
+    </div>
+  );
+}
+
+function RetryPaymentButton({ requestId }: { requestId: string }) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function retry() {
+    setLoading(true);
+    setError(null);
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session) {
+      setLoading(false);
+      setError("Tu sesión expiró, vuelve a iniciar sesión.");
+      return;
+    }
+
+    const res = await fetch(`/api/requests/${requestId}/checkout`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    });
+    const json = await res.json();
+    if (!res.ok) {
+      setLoading(false);
+      setError(json.error ?? "No se pudo iniciar el pago");
+      return;
+    }
+    window.location.href = json.checkoutUrl;
+  }
+
+  return (
+    <div className="mt-4">
+      {error && <p className="mb-2 text-sm text-error">{error}</p>}
+      <button className={btnPrimary} onClick={retry} disabled={loading}>
+        {loading ? "Redirigiendo…" : "Pagar ahora"}
+      </button>
     </div>
   );
 }

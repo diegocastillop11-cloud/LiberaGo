@@ -1,0 +1,12 @@
+-- LiberaGo — cobro con MercadoPago: el cliente paga al crear la solicitud,
+-- antes de que cualquier trabajador la vea. Encaja con la clausula de
+-- reembolso del 50% ya escrita en los T&C (que asume que hubo cobro previo)
+-- y evita que un trabajador acepte un trabajo que despues no se paga.
+--
+-- Nuevo estado intermedio: la fila existe desde el insert pero no se
+-- despacha a nadie hasta que el webhook de pago confirme (ver 0013).
+--
+-- Solo, en su propio archivo/transaccion — un valor nuevo de enum no se
+-- puede usar en la misma transaccion en que se agrega (mismo patron que
+-- 0011_no_completado_status.sql).
+alter type request_status add value 'pendiente_pago' before 'solicitado';

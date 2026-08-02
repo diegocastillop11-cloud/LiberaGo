@@ -6,6 +6,7 @@ import { AppHeader } from "../components/AppHeader";
 import { btnDanger, btnGhost, cardBase, inputBase } from "../lib/ui";
 
 const STATUS_LABELS: Record<RequestStatus, string> = {
+  pendiente_pago: "Pendiente de pago",
   solicitado: "Solicitado",
   asignado: "Asignado",
   en_curso: "En curso",
@@ -15,6 +16,7 @@ const STATUS_LABELS: Record<RequestStatus, string> = {
 };
 
 const STATUS_PILL: Record<RequestStatus, string> = {
+  pendiente_pago: "bg-surface-2 text-ink-muted",
   solicitado: "bg-confirmed/15 text-confirmed-ink",
   asignado: "bg-action/15 text-action-ink",
   en_curso: "bg-action/15 text-action-ink",
@@ -25,6 +27,7 @@ const STATUS_PILL: Record<RequestStatus, string> = {
 
 const FILTERS: Array<{ key: "todas" | RequestStatus; label: string }> = [
   { key: "todas", label: "Todas" },
+  { key: "pendiente_pago", label: "Pendiente de pago" },
   { key: "solicitado", label: "Solicitado" },
   { key: "asignado", label: "Asignado" },
   { key: "en_curso", label: "En curso" },
@@ -39,6 +42,7 @@ export default function AdminSolicitudes() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<"todas" | RequestStatus>("todas");
+  const [refundingId, setRefundingId] = useState<string | null>(null);
 
   async function load() {
     const { data, error } = await supabase
@@ -84,6 +88,33 @@ export default function AdminSolicitudes() {
       .update({ status: "no_completado", failure_reason: reason.trim() || null })
       .eq("id", r.id);
     if (error) setError(error.message);
+  }
+
+  async function refund(r: ServiceRequest) {
+    const amount = Math.round(r.price / 2);
+    if (!window.confirm(`¿Reembolsar $${amount.toLocaleString("es-CL")} (50%) a "${r.client_name}"?`)) return;
+
+    setRefundingId(r.id);
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session) {
+      setRefundingId(null);
+      setError("Tu sesión expiró, vuelve a iniciar sesión.");
+      return;
+    }
+
+    const res = await fetch(`/api/requests/${r.id}/refund`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    });
+    const json = await res.json();
+    setRefundingId(null);
+    if (!res.ok) {
+      setError(json.error ?? "No se pudo reembolsar");
+      return;
+    }
+    load();
   }
 
   async function reassign(r: ServiceRequest, workerId: string) {
@@ -216,6 +247,24 @@ export default function AdminSolicitudes() {
                 {r.failure_reason && (
                   <p className="mt-1 text-xs text-error">No completado: "{r.failure_reason}"</p>
                 )}
+                {r.status === "no_completado" && r.mp_payment_id && (
+                  <div className="mt-2">
+                    {r.refunded_at ? (
+                      <p className="text-xs text-success">
+                        Reembolsado ${r.refund_amount?.toLocaleString("es-CL")} el{" "}
+                        {new Date(r.refunded_at).toLocaleDateString("es-CL")}
+                      </p>
+                    ) : (
+                      <button
+                        className={`${btnDanger} !min-h-0 !px-3 !py-1.5 !text-xs`}
+                        onClick={() => refund(r)}
+                        disabled={refundingId === r.id}
+                      >
+                        {refundingId === r.id ? "Reembolsando…" : "Reembolsar 50%"}
+                      </button>
+                    )}
+                  </div>
+                )}
                 {r.worker_notes.length > 0 && (
                   <div className="mt-1 flex flex-col gap-0.5">
                     {r.worker_notes.map((note, i) => (
@@ -226,7 +275,10 @@ export default function AdminSolicitudes() {
                   </div>
                 )}
 
-                {r.status !== "completado" && r.status !== "cancelado" && r.status !== "no_completado" && (
+                {r.status !== "pendiente_pago" &&
+                  r.status !== "completado" &&
+                  r.status !== "cancelado" &&
+                  r.status !== "no_completado" && (
                   <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-line pt-4">
                     <label htmlFor={`worker-${r.id}`} className="text-xs font-medium text-ink-muted">
                       Reasignar a

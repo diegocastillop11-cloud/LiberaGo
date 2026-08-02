@@ -51,3 +51,21 @@ export async function offerToNextWorker(
     await scheduleAdvanceOffer(baseUrl, requestId, next, OFFER_WINDOW_SECONDS);
   }
 }
+
+// Arma la cola de trabajadores aprobados (orden aleatorio) y ofrece la
+// solicitud al primero — usado tanto cuando se crea una solicitud ya
+// pagada (servicios sin pago) como cuando el webhook de MercadoPago
+// confirma el cobro de una que empezo en 'pendiente_pago'.
+export async function dispatchToApprovedWorkers(
+  supabaseAdmin: SupabaseClient,
+  baseUrl: string,
+  requestId: string,
+) {
+  const { data: workers } = await supabaseAdmin
+    .from("profiles")
+    .select("id")
+    .eq("worker_status", "approved");
+
+  const queue = shuffle((workers ?? []).map((w) => w.id as string));
+  await offerToNextWorker(supabaseAdmin, baseUrl, requestId, queue);
+}

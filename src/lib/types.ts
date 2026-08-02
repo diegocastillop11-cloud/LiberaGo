@@ -11,6 +11,7 @@ export type Profile = {
 };
 
 export type RequestStatus =
+  | "pendiente_pago"
   | "solicitado"
   | "asignado"
   | "en_curso"
@@ -63,6 +64,11 @@ export type ServiceRequest = {
   failure_reason: string | null;
   offered_to: string | null;
   offer_expires_at: string | null;
+  mp_preference_id: string | null;
+  mp_payment_id: string | null;
+  paid_at: string | null;
+  refunded_at: string | null;
+  refund_amount: number | null;
   created_at: string;
   updated_at: string;
 };

@@ -95,16 +95,40 @@ export default function ClienteSolicitar() {
         client_name: profile?.full_name ?? profile?.email ?? "Cliente",
         client_phone: phone.trim(),
         notes: notes.trim() || null,
+        status: "pendiente_pago",
       })
       .select("id")
       .single();
 
-    setSubmitting(false);
     if (error) {
+      setSubmitting(false);
       setError(error.message);
       return;
     }
-    navigate(`/cliente/solicitudes/${data.id}`);
+
+    const checkoutError = await goToCheckout(data.id);
+    if (checkoutError) {
+      setSubmitting(false);
+      setError(checkoutError);
+      navigate(`/cliente/solicitudes/${data.id}`);
+    }
+  }
+
+  async function goToCheckout(requestId: string): Promise<string | null> {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session) return "Tu sesión expiró, vuelve a iniciar sesión.";
+
+    const res = await fetch(`/api/requests/${requestId}/checkout`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    });
+    const json = await res.json();
+    if (!res.ok) return json.error ?? "No se pudo iniciar el pago";
+
+    window.location.href = json.checkoutUrl;
+    return null;
   }
 
   return (

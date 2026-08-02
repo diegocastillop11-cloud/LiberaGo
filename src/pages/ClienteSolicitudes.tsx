@@ -7,6 +7,7 @@ import { AppHeader } from "../components/AppHeader";
 import { btnGhost, cardBase } from "../lib/ui";
 
 const STATUS_LABELS: Record<RequestStatus, string> = {
+  pendiente_pago: "Pendiente de pago",
   solicitado: "Solicitado",
   asignado: "Asignado",
   en_curso: "En curso",
@@ -16,6 +17,7 @@ const STATUS_LABELS: Record<RequestStatus, string> = {
 };
 
 const STATUS_PILL: Record<RequestStatus, string> = {
+  pendiente_pago: "bg-surface-2 text-ink-muted",
   solicitado: "bg-confirmed/15 text-confirmed-ink",
   asignado: "bg-action/15 text-action-ink",
   en_curso: "bg-action/15 text-action-ink",

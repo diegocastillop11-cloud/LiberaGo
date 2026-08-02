@@ -40,7 +40,7 @@ mantenimiento para un solo dev en el arranque; se puede separar después si duel
 | Backend | Express + TypeScript, serverless (Vercel functions) | Un solo `api/index.ts`, escala sola, sin servidor que mantener |
 | Auth/DB | Supabase (Postgres + Auth + Realtime) | Auth con roles + DB + **Realtime** en un solo proveedor — el trabajador necesita ver solicitudes nuevas al instante sin refrescar |
 | Deploy | Vercel | Push a master = deploy; previews por rama |
-| Pagos | Ninguno en el MVP | El día 1 no cobra en la app — el pago se coordina fuera. Se agrega pasarela (MercadoPago) después de validar el flujo pedido→aceptación |
+| Pagos | MercadoPago (Checkout Pro) | El cliente paga al crear la solicitud, antes de que un trabajador la vea — encaja con el reembolso del 50% de los T&C para "no completado". Igual patrón que Ergania: fetch directo a la API de MP, sin SDK. Agregado 2026-08-01, después de validar el flujo pedido→aceptación sin pago |
 | IA | No aplica por ahora | — |
 Decisiones de runtime tomadas ANTES de codear
 - ¿Dónde corre en producción? Serverless (Vercel functions) → nada de Chrome
@@ -107,6 +107,23 @@ Falta además crear a mano en Supabase Dashboard → Database → Webhooks un
 webhook `INSERT` sobre `requests` que llame a
 `https://<dominio>/api/webhooks/request-created` con el header
 `x-liberago-webhook-secret: <WEBHOOK_SECRET>`.
+
+### Variables requeridas — pagos con MercadoPago (2026-08-01)
+Sin `MERCADOPAGO_ACCESS_TOKEN` el checkout falla al crear la solicitud (error
+explícito, no silencioso) — a diferencia de las opcionales de arriba, esto sí
+bloquea el flujo cliente→trabajador porque ahora nace pagado.
+```
+MERCADOPAGO_ACCESS_TOKEN   # secreta, solo backend — MercadoPago > Tu negocio > Configuración > Credenciales
+MP_WEBHOOK_SECRET           # secreto para verificar la firma HMAC del webhook de pago — MercadoPago > Tu negocio > Webhooks > (la notificación) > Firma secreta
+```
+Falta crear a mano en el dashboard de MercadoPago (Tu negocio → Webhooks) una
+notificación de tipo `payment` apuntando a
+`https://<dominio>/api/webhooks/mercadopago-payment` — MP la firma con
+`MP_WEBHOOK_SECRET` una vez creada (no se puede saber el secreto antes de
+crearla). Sin `MP_WEBHOOK_SECRET` configurado, el endpoint acepta cualquier
+notificación sin verificar firma (fail-open deliberado para poder probar en
+preview antes de tener el webhook real armado) — nunca dejar así en
+producción.
 ## Reglas generales
 1. Leer archivos antes de escribir código.
 2. Preferir edición sobre reescritura completa.
@@ -128,6 +145,26 @@ webhook `INSERT` sobre `requests` que llame a
     explícito. No asumir aprobación por silencio ni por aprobaciones
     anteriores de otros cambios.
 ## Gotchas
+- **Un trigger `BEFORE UPDATE` sin bypass explícito para `service_role`
+  bloquea las actualizaciones hechas por el backend con la service key.**
+  Qué pasó: al diseñar el webhook de pago (que necesita mover una solicitud
+  de `pendiente_pago` a `solicitado` usando `supabaseAdmin`), se encontró
+  que `enforce_requests_update_columns` (0006/0007/0009) solo tenía bypass
+  para `public.is_admin()`, que depende de `auth.uid()` — y `auth.uid()` es
+  `NULL` para conexiones con la `service_role` key (su JWT no trae claim
+  `sub`). Sin bypass, el trigger cae al `raise exception 'No autorizado a
+  modificar esta solicitud'` para cualquier UPDATE del backend sobre una
+  fila sin `worker_id` propio (exactamente el caso del despacho a
+  trabajadores y el de confirmar un pago). Por qué: RLS (`BYPASSRLS` del rol
+  `service_role`) y los triggers son mecanismos independientes — bypassear
+  RLS no bypassea triggers. Cómo se evitó: 0013 agrega `auth.role() =
+  'service_role'` como bypass explícito junto a `is_admin()`. Es seguro
+  porque `SUPABASE_SERVICE_ROLE_KEY` nunca llega al frontend (ver env vars
+  arriba). Al tocar cualquier trigger de `requests`, verificar que las
+  actualizaciones hechas desde `api/` (siempre vía `supabaseAdmin`) sigan
+  pasando — no asumir que "ya funciona" solo porque no tira error en el
+  cliente (el backend puede estar tragándose el error si no se revisa el
+  resultado del `.update()`).
 - **`vercel login` con el CLI viejo solo redirige a un changelog, no autentica.**
   Qué pasó: con `vercel@37.x`, elegir "Continue with GitHub" abre
   `vercel.com/api/registration/login-with-github?...`, que Vercel deprecó

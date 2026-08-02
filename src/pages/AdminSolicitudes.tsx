@@ -91,8 +91,10 @@ export default function AdminSolicitudes() {
   }
 
   async function refund(r: ServiceRequest) {
-    const amount = Math.round(r.price / 2);
-    if (!window.confirm(`¿Reembolsar $${amount.toLocaleString("es-CL")} (50%) a "${r.client_name}"?`)) return;
+    const isFull = r.status === "cancelado";
+    const amount = isFull ? r.price : Math.round(r.price / 2);
+    const pct = isFull ? "100%" : "50%";
+    if (!window.confirm(`¿Reembolsar $${amount.toLocaleString("es-CL")} (${pct}) a "${r.client_name}"?`)) return;
 
     setRefundingId(r.id);
     const {
@@ -247,7 +249,7 @@ export default function AdminSolicitudes() {
                 {r.failure_reason && (
                   <p className="mt-1 text-xs text-error">No completado: "{r.failure_reason}"</p>
                 )}
-                {r.status === "no_completado" && r.mp_payment_id && (
+                {(r.status === "no_completado" || r.status === "cancelado") && r.mp_payment_id && (
                   <div className="mt-2">
                     {r.refunded_at ? (
                       <p className="text-xs text-success">
@@ -260,7 +262,9 @@ export default function AdminSolicitudes() {
                         onClick={() => refund(r)}
                         disabled={refundingId === r.id}
                       >
-                        {refundingId === r.id ? "Reembolsando…" : "Reembolsar 50%"}
+                        {refundingId === r.id
+                          ? "Reembolsando…"
+                          : `Reembolsar ${r.status === "cancelado" ? "100%" : "50%"}`}
                       </button>
                     )}
                   </div>

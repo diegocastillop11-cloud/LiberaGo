@@ -131,8 +131,8 @@ export default function Landing() {
                 </Link>
               </div>
               <p className="mt-4 text-sm text-ink-muted">
-                Sin pago con tarjeta todavía — coordinas el pago directo con tu
-                trabajador.
+                Pagas en línea con Mercado Pago al pedir el servicio — nada de coordinar plata en
+                persona.
               </p>
             </div>
 
@@ -292,11 +292,16 @@ export default function Landing() {
       </main>
 
       <footer className="border-t border-line">
-        <div className="mx-auto flex max-w-[1180px] flex-col gap-1 px-6 py-10 text-sm text-ink-muted sm:flex-row sm:items-center sm:justify-between">
+        <div className="mx-auto flex max-w-[1180px] flex-col gap-3 px-6 py-10 text-sm text-ink-muted sm:flex-row sm:items-center sm:justify-between">
           <span className="font-display text-base font-semibold text-ink">
             LiberaGo
           </span>
-          <span>Santiago, Chile · © 2026</span>
+          <div className="flex items-center gap-4">
+            <Link to="/terminos" className="hover:text-ink hover:underline underline-offset-4">
+              Términos y Condiciones
+            </Link>
+            <span>Santiago, Chile · © 2026</span>
+          </div>
         </div>
       </footer>
     </>

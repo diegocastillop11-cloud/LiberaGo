@@ -1,6 +1,7 @@
 import { Routes, Route, Link } from "react-router-dom";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
+import Terminos from "./pages/Terminos";
 import ClienteSolicitar from "./pages/ClienteSolicitar";
 import ClienteSolicitudes from "./pages/ClienteSolicitudes";
 import ClienteSolicitudDetalle from "./pages/ClienteSolicitudDetalle";
@@ -30,6 +31,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/terminos" element={<Terminos />} />
 
       <Route
         path="/cliente"

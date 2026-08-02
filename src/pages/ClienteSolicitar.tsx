@@ -7,6 +7,7 @@ import { LocationPicker, type LocationValue } from "../components/LocationPicker
 import { AppHeader } from "../components/AppHeader";
 import { btnPrimary, btnGhost, inputBase, cardBase } from "../lib/ui";
 import { haversineKm } from "../lib/geo";
+import { startCheckout } from "../lib/checkout";
 
 const emptyLocation: LocationValue = { address: "", lat: null, lng: null };
 
@@ -106,29 +107,13 @@ export default function ClienteSolicitar() {
       return;
     }
 
-    const checkoutError = await goToCheckout(data.id);
-    if (checkoutError) {
-      setSubmitting(false);
-      setError(checkoutError);
-      navigate(`/cliente/solicitudes/${data.id}`);
-    }
-  }
-
-  async function goToCheckout(requestId: string): Promise<string | null> {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    if (!session) return "Tu sesión expiró, vuelve a iniciar sesión.";
-
-    const res = await fetch(`/api/requests/${requestId}/checkout`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${session.access_token}` },
-    });
-    const json = await res.json();
-    if (!res.ok) return json.error ?? "No se pudo iniciar el pago";
-
-    window.location.href = json.checkoutUrl;
-    return null;
+    // Navegamos a la pantalla de seguimiento ANTES de redirigir a MercadoPago
+    // (no despues) — asi, si el cliente se arrepiente y vuelve atras con el
+    // navegador, aterriza en una pantalla con mensaje claro y un boton
+    // "Pagar ahora" para reintentar, no en este formulario congelado a mitad
+    // de la redireccion (lo que mostraba antes, ver bug reportado 2026-08-02).
+    navigate(`/cliente/solicitudes/${data.id}`, { replace: true });
+    await startCheckout(data.id);
   }
 
   return (
@@ -233,7 +218,16 @@ export default function ClienteSolicitar() {
               </div>
             </div>
 
-            <div className="mt-6 flex items-center justify-between">
+            <p className="mt-6 text-xs text-ink-muted">
+              Al confirmar te vamos a redirigir a Mercado Pago para pagar el total. Tu solicitud recién
+              se ofrece a un trabajador cuando el pago se confirma. Al pagar aceptas nuestros{" "}
+              <Link to="/terminos" className="text-action underline-offset-4 hover:underline">
+                Términos y Condiciones
+              </Link>
+              .
+            </p>
+
+            <div className="mt-3 flex items-center justify-between">
               <span className="font-data text-lg font-semibold text-ink">
                 {estimate?.price != null ? `$${estimate.price.toLocaleString("es-CL")}` : "Falta la ruta"}
                 {estimate?.km != null && (
@@ -243,7 +237,7 @@ export default function ClienteSolicitar() {
                 )}
               </span>
               <button type="submit" className={btnPrimary} disabled={submitting}>
-                {submitting ? "Enviando…" : "Confirmar solicitud"}
+                {submitting ? "Redirigiendo a Mercado Pago…" : "Confirmar y pagar"}
               </button>
             </div>
           </form>

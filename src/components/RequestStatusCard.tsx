@@ -1,7 +1,16 @@
 import { useState } from "react";
-import { supabase } from "../lib/supabase";
+import { Link } from "react-router-dom";
 import type { ServiceRequest } from "../lib/types";
 import { btnPrimary } from "../lib/ui";
+import { startCheckout } from "../lib/checkout";
+
+function TerminosLink() {
+  return (
+    <Link to="/terminos" className="text-action underline-offset-4 hover:underline">
+      Términos y Condiciones
+    </Link>
+  );
+}
 
 const STEP_ORDER = ["solicitado", "asignado", "en_curso", "completado"] as const;
 const STEP_LABELS: Record<(typeof STEP_ORDER)[number], string> = {
@@ -17,8 +26,8 @@ export function RequestStatusCard({ request }: { request: ServiceRequest }) {
       <div className="rounded-lg border border-line bg-surface p-6">
         <p className="font-display text-lg font-semibold text-ink">{request.service_name}</p>
         <p className="mt-2 text-sm text-ink-muted">
-          Todavía no se confirma el pago de esta solicitud — no se le ofrece a ningún trabajador hasta
-          que se complete.
+          El pago de esta solicitud no se completó — no se le ofrece a ningún trabajador hasta que se
+          confirme. Si te arrepentiste o algo falló al pagar, puedes intentarlo de nuevo.
         </p>
         <RetryPaymentButton requestId={request.id} />
       </div>
@@ -30,6 +39,14 @@ export function RequestStatusCard({ request }: { request: ServiceRequest }) {
       <div className="rounded-lg border border-line bg-surface p-6">
         <p className="font-display text-lg font-semibold text-ink">{request.service_name}</p>
         <p className="mt-2 text-sm text-error">Esta solicitud fue cancelada.</p>
+        {request.mp_payment_id && (
+          <p className="mt-2 text-xs text-ink-muted">
+            Según nuestros <TerminosLink /> tienes derecho a un reembolso del 100% del pago.
+            {request.refunded_at
+              ? ` Ya se procesó — $${request.refund_amount?.toLocaleString("es-CL")}.`
+              : ""}
+          </p>
+        )}
         <WorkerNotes request={request} />
       </div>
     );
@@ -44,7 +61,10 @@ export function RequestStatusCard({ request }: { request: ServiceRequest }) {
           <p className="mt-1 text-sm text-ink-muted">Motivo: "{request.failure_reason}"</p>
         )}
         <p className="mt-2 text-xs text-ink-muted">
-          Según nuestros Términos y Condiciones, esto da derecho a un reembolso del 50% del pago.
+          Según nuestros <TerminosLink /> esto da derecho a un reembolso del 50% del pago.
+          {request.refunded_at
+            ? ` Ya se procesó — $${request.refund_amount?.toLocaleString("es-CL")}.`
+            : ""}
         </p>
         <WorkerNotes request={request} />
       </div>
@@ -180,26 +200,11 @@ function RetryPaymentButton({ requestId }: { requestId: string }) {
   async function retry() {
     setLoading(true);
     setError(null);
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    if (!session) {
+    const checkoutError = await startCheckout(requestId);
+    if (checkoutError) {
       setLoading(false);
-      setError("Tu sesión expiró, vuelve a iniciar sesión.");
-      return;
+      setError(checkoutError);
     }
-
-    const res = await fetch(`/api/requests/${requestId}/checkout`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${session.access_token}` },
-    });
-    const json = await res.json();
-    if (!res.ok) {
-      setLoading(false);
-      setError(json.error ?? "No se pudo iniciar el pago");
-      return;
-    }
-    window.location.href = json.checkoutUrl;
   }
 
   return (

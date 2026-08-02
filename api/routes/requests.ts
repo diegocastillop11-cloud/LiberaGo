@@ -48,8 +48,9 @@ requestsRouter.post("/:id/checkout", async (req, res) => {
   }
 });
 
-// Reembolso manual del 50% (clausula de "no completado" de los T&C) —
-// disparado por un admin desde el panel, nunca automatico (ver CLAUDE.md).
+// Reembolso manual (clausula de los T&C: 50% si "no completado", 100% si
+// "cancelado") — disparado por un admin desde el panel, nunca automatico
+// (ver CLAUDE.md).
 requestsRouter.post("/:id/refund", async (req, res) => {
   const userId = await getAuthedUserId(req);
   if (!userId) {
@@ -69,7 +70,7 @@ requestsRouter.post("/:id/refund", async (req, res) => {
     .eq("id", req.params.id)
     .single();
 
-  if (!request || request.status !== "no_completado" || !request.mp_payment_id) {
+  if (!request || (request.status !== "no_completado" && request.status !== "cancelado") || !request.mp_payment_id) {
     res.status(409).json({ error: "Esta solicitud no tiene un pago que reembolsar" });
     return;
   }
@@ -78,7 +79,7 @@ requestsRouter.post("/:id/refund", async (req, res) => {
     return;
   }
 
-  const amount = Math.round(request.price / 2);
+  const amount = request.status === "cancelado" ? request.price : Math.round(request.price / 2);
   try {
     await refundPayment(request.mp_payment_id, amount);
     await supabaseAdmin

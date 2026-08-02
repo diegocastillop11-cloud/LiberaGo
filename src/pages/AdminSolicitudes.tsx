@@ -257,15 +257,22 @@ export default function AdminSolicitudes() {
                         {new Date(r.refunded_at).toLocaleDateString("es-CL")}
                       </p>
                     ) : (
-                      <button
-                        className={`${btnDanger} !min-h-0 !px-3 !py-1.5 !text-xs`}
-                        onClick={() => refund(r)}
-                        disabled={refundingId === r.id}
-                      >
-                        {refundingId === r.id
-                          ? "Reembolsando…"
-                          : `Reembolsar ${r.status === "cancelado" ? "100%" : "50%"}`}
-                      </button>
+                      <div className="flex flex-col items-start gap-1">
+                        <button
+                          className={`${btnDanger} !min-h-0 !px-3 !py-1.5 !text-xs`}
+                          onClick={() => refund(r)}
+                          disabled={refundingId === r.id}
+                        >
+                          {refundingId === r.id
+                            ? "Reembolsando…"
+                            : `Reembolsar ${r.status === "cancelado" ? "100%" : "50%"}`}
+                        </button>
+                        {r.status === "no_completado" && (
+                          <p className="text-[11px] text-ink-muted">
+                            Solo si fue por fuerza mayor — no si fue responsabilidad del cliente.
+                          </p>
+                        )}
+                      </div>
                     )}
                   </div>
                 )}

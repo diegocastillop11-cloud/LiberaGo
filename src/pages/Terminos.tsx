@@ -33,20 +33,29 @@ const secciones = [
   {
     title: "5. Reembolsos",
     body: [
-      "Si tu solicitud queda marcada como no completado, tienes derecho a un reembolso del 50% de lo pagado. El otro 50% cubre el tiempo y esfuerzo que el Trabajador ya invirtió en el intento, aunque no haya podido terminarlo.",
+      "Si tu solicitud queda marcada como no completado por una causa de fuerza mayor ajena al Trabajador y al Cliente (por ejemplo, el lugar del trámite cerró antes de tiempo, la institución canceló el trámite, un accidente, etc.), tienes derecho a un reembolso del 50% de lo pagado. El otro 50% cubre el tiempo y los recursos que el Trabajador ya invirtió en el intento.",
+      "Este reembolso del 50% no aplica si la solicitud no se completó por una causa atribuible al Cliente — por ejemplo, no estar presente cuando correspondía, entregar una dirección o información incorrecta, o arrepentirse después de que el Trabajador ya inició el servicio. En esos casos el Trabajador igualmente gastó su tiempo y sus recursos, y no corresponde reembolso.",
+      "LiberaGo revisa cada solicitud marcada como no completado antes de autorizar cualquier reembolso — no es un proceso automático — precisamente para evitar el uso indebido de esta cláusula.",
       "Si tu solicitud es cancelada por LiberaGo antes de que un Trabajador la tome, tienes derecho a un reembolso del 100% de lo pagado.",
       "Los reembolsos se procesan de vuelta al mismo medio de pago usado en MercadoPago y pueden tardar los días hábiles que MercadoPago indique según tu método de pago.",
     ],
   },
   {
-    title: "6. Responsabilidad",
+    title: "6. Uso indebido y fraude",
+    body: [
+      "La cláusula de reembolso del 50% existe para cubrir casos genuinos de fuerza mayor, no como una forma de recuperar parte del pago de una solicitud que un Cliente ya no quiere o de la que se arrepintió — el Trabajador gasta tiempo y recursos reales en cada intento, se complete o no.",
+      "LiberaGo puede rechazar un reembolso, suspender una cuenta o negar el acceso a la plataforma si detecta un patrón de solicitudes creadas de mala fe — por ejemplo, para intentar obtener reembolsos sin una causa real de fuerza mayor.",
+    ],
+  },
+  {
+    title: "7. Responsabilidad",
     body: [
       "LiberaGo pone el cuidado razonable en verificar a los Trabajadores antes de que aparezcan en la plataforma, pero no garantiza el resultado de cada trámite o mandado — eso depende de factores fuera de nuestro control (por ejemplo, el funcionamiento de la institución donde se hace el trámite).",
       "Cualquier problema con un Trabajador o con un Cliente durante un servicio puede reportarse a LiberaGo para revisión.",
     ],
   },
   {
-    title: "7. Cambios a estos términos",
+    title: "8. Cambios a estos términos",
     body: [
       "Estos términos pueden actualizarse a medida que la plataforma evoluciona. Los cambios aplican a las solicitudes creadas después de la actualización.",
     ],

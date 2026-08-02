@@ -61,10 +61,15 @@ export function RequestStatusCard({ request }: { request: ServiceRequest }) {
           <p className="mt-1 text-sm text-ink-muted">Motivo: "{request.failure_reason}"</p>
         )}
         <p className="mt-2 text-xs text-ink-muted">
-          Según nuestros <TerminosLink /> esto da derecho a un reembolso del 50% del pago.
-          {request.refunded_at
-            ? ` Ya se procesó — $${request.refund_amount?.toLocaleString("es-CL")}.`
-            : ""}
+          {request.refunded_at ? (
+            <>Se procesó un reembolso del 50% — ${request.refund_amount?.toLocaleString("es-CL")}.</>
+          ) : (
+            <>
+              Si esto fue por una causa de fuerza mayor, según nuestros <TerminosLink /> puedes tener
+              derecho a un reembolso del 50% del pago. Nuestro equipo revisa cada caso antes de
+              procesarlo.
+            </>
+          )}
         </p>
         <WorkerNotes request={request} />
       </div>

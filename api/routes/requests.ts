@@ -1,7 +1,7 @@
 import { Router, type Request } from "express";
 import { supabaseAdmin } from "../lib/supabase.js";
 import { getAuthedUserId } from "../lib/auth.js";
-import { offerToNextWorker } from "../lib/offerDispatch.js";
+import { dispatchToApprovedWorkers, offerToNextWorker } from "../lib/offerDispatch.js";
 import { createPaymentPreference, refundPayment } from "../lib/mercadopago.js";
 
 export const requestsRouter = Router();
@@ -121,6 +121,48 @@ requestsRouter.post("/:id/cancel", async (req, res) => {
     res.status(500).json({ error: error.message });
     return;
   }
+  res.json({ ok: true });
+});
+
+// SOLO PRUEBAS — salta MercadoPago y confirma el pago directo, para poder
+// probar el resto del flujo (despacho a trabajador, etc.) sin pagar de
+// verdad en cada intento. Gateado por VERCEL_ENV: nunca funciona en
+// producción (VERCEL_ENV='production' solo en el deploy promovido a prod),
+// sin importar si el botón queda visible en el frontend — nunca borrar este
+// chequeo al limpiar el botón, borrar el endpoint entero en su lugar.
+requestsRouter.post("/:id/skip-payment-test", async (req, res) => {
+  if (process.env.VERCEL_ENV === "production") {
+    res.status(403).json({ error: "No disponible en producción" });
+    return;
+  }
+
+  const userId = await getAuthedUserId(req);
+  if (!userId) {
+    res.status(401).json({ error: "No autorizado" });
+    return;
+  }
+
+  const { data: request } = await supabaseAdmin
+    .from("requests")
+    .select("id, client_id, status")
+    .eq("id", req.params.id)
+    .single();
+
+  if (!request || request.client_id !== userId || request.status !== "pendiente_pago") {
+    res.status(409).json({ error: "Esta solicitud no está pendiente de pago" });
+    return;
+  }
+
+  const { error } = await supabaseAdmin
+    .from("requests")
+    .update({ status: "solicitado", paid_at: new Date().toISOString() })
+    .eq("id", request.id);
+  if (error) {
+    res.status(500).json({ error: error.message });
+    return;
+  }
+
+  await dispatchToApprovedWorkers(supabaseAdmin, baseUrlFor(req), request.id);
   res.json({ ok: true });
 });
 

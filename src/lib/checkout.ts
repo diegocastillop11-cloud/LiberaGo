@@ -39,3 +39,20 @@ export async function cancelUnpaidRequest(requestId: string): Promise<string | n
   if (!res.ok) return json.error ?? "No se pudo cancelar";
   return null;
 }
+
+// SOLO PRUEBAS — el backend rechaza esto en producción (VERCEL_ENV) sin
+// importar si el botón queda visible acá.
+export async function skipPaymentForTesting(requestId: string): Promise<string | null> {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session) return "Tu sesión expiró, vuelve a iniciar sesión.";
+
+  const res = await fetch(`/api/requests/${requestId}/skip-payment-test`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${session.access_token}` },
+  });
+  const json = await res.json();
+  if (!res.ok) return json.error ?? "No se pudo saltar el pago";
+  return null;
+}

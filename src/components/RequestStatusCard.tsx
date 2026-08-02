@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import type { ServiceRequest } from "../lib/types";
 import { btnGhost, btnPrimary } from "../lib/ui";
-import { cancelUnpaidRequest, startCheckout } from "../lib/checkout";
+import { cancelUnpaidRequest, skipPaymentForTesting, startCheckout } from "../lib/checkout";
 
 function TerminosLink() {
   return (
@@ -262,6 +262,7 @@ function PendingPaymentCard({ request }: { request: ServiceRequest }) {
             <RetryPaymentButton requestId={request.id} />
             <CancelUnpaidButton requestId={request.id} />
           </div>
+          <SkipPaymentTestButton requestId={request.id} />
         </>
       )}
     </div>
@@ -315,6 +316,34 @@ function CancelUnpaidButton({ requestId }: { requestId: string }) {
       {error && <p className="mb-2 text-sm text-error">{error}</p>}
       <button className={btnGhost} onClick={cancel} disabled={loading}>
         {loading ? "Cancelando…" : "Cancelar y elegir otro servicio"}
+      </button>
+    </div>
+  );
+}
+
+// SOLO PRUEBAS — el backend lo rechaza en producción sin importar si este
+// botón queda visible. Ver comentario en api/routes/requests.ts.
+function SkipPaymentTestButton({ requestId }: { requestId: string }) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function skip() {
+    setLoading(true);
+    setError(null);
+    const skipError = await skipPaymentForTesting(requestId);
+    if (skipError) {
+      setLoading(false);
+      setError(skipError);
+    }
+    // si no hay error, el status ya cambio a 'solicitado' en la DB — el
+    // realtime de ClienteSolicitudDetalle actualiza esta pantalla solo.
+  }
+
+  return (
+    <div className="mt-4 border-t border-line pt-4">
+      {error && <p className="mb-2 text-sm text-error">{error}</p>}
+      <button className={`${btnGhost} !text-xs`} onClick={skip} disabled={loading}>
+        {loading ? "Saltando…" : "Saltar pago (solo pruebas)"}
       </button>
     </div>
   );

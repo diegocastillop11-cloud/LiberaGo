@@ -20,6 +20,7 @@ export default function ClienteSolicitar() {
   const [locationValues, setLocationValues] = useState<LocationValue[]>([]);
   const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
+  const [peopleCount, setPeopleCount] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -38,6 +39,7 @@ export default function ClienteSolicitar() {
   function selectService(service: Service) {
     setSelected(service);
     setLocationValues(service.location_labels.map(() => emptyLocation));
+    setPeopleCount("");
     setError(null);
   }
 
@@ -47,16 +49,27 @@ export default function ClienteSolicitar() {
 
   const estimate = useMemo(() => {
     if (!selected) return null;
-    if (selected.pricing_type !== "distance") return { price: selected.price, km: null as number | null };
 
-    const a = locationValues[0];
-    const b = locationValues[1];
-    if (!a || !b || a.lat == null || a.lng == null || b.lat == null || b.lng == null) {
-      return { price: null as number | null, km: null as number | null };
+    if (selected.pricing_type === "distance") {
+      const a = locationValues[0];
+      const b = locationValues[1];
+      if (!a || !b || a.lat == null || a.lng == null || b.lat == null || b.lng == null) {
+        return { price: null as number | null, km: null as number | null };
+      }
+      const km = haversineKm(a.lat, a.lng, b.lat, b.lng);
+      return { price: selected.price + Math.round(km * (selected.price_per_km ?? 0)), km };
     }
-    const km = haversineKm(a.lat, a.lng, b.lat, b.lng);
-    return { price: selected.price + Math.round(km * (selected.price_per_km ?? 0)), km };
-  }, [selected, locationValues]);
+
+    if (selected.pricing_type === "per_person") {
+      const n = Number(peopleCount);
+      if (!peopleCount.trim() || !Number.isFinite(n) || n < 1) {
+        return { price: null as number | null, km: null as number | null };
+      }
+      return { price: selected.price + Math.round(n * (selected.price_per_person ?? 0)), km: null as number | null };
+    }
+
+    return { price: selected.price, km: null as number | null };
+  }, [selected, locationValues, peopleCount]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -83,6 +96,12 @@ export default function ClienteSolicitar() {
       return;
     }
 
+    const peopleCountValue = Number(peopleCount);
+    if (selected.pricing_type === "per_person" && (!peopleCount.trim() || !Number.isFinite(peopleCountValue) || peopleCountValue < 1)) {
+      setError("Indica la cantidad de personas.");
+      return;
+    }
+
     setSubmitting(true);
     const { data, error } = await supabase
       .from("requests")
@@ -91,6 +110,7 @@ export default function ClienteSolicitar() {
         service_name: selected.name,
         price: estimate?.price ?? selected.price,
         locations,
+        people_count: selected.pricing_type === "per_person" ? peopleCountValue : null,
         client_id: user.id,
         client_name: profile?.full_name ?? profile?.email ?? "Cliente",
         client_phone: phone.trim(),
@@ -161,6 +181,8 @@ export default function ClienteSolicitar() {
                     ${service.price.toLocaleString("es-CL")}
                     {service.pricing_type === "distance" &&
                       ` + $${(service.price_per_km ?? 0).toLocaleString("es-CL")}/km`}
+                    {service.pricing_type === "per_person" &&
+                      ` + $${(service.price_per_person ?? 0).toLocaleString("es-CL")}/persona`}
                   </span>
                 </button>
               ))}
@@ -186,6 +208,31 @@ export default function ClienteSolicitar() {
                   onChange={(v) => updateLocationValue(i, v)}
                 />
               ))}
+
+              {selected.pricing_type === "per_person" && (
+                <div className="flex flex-col gap-1.5">
+                  <label htmlFor="peopleCount" className="text-sm font-medium text-ink-muted">
+                    Cantidad de personas
+                  </label>
+                  <input
+                    id="peopleCount"
+                    type="number"
+                    min="1"
+                    step="1"
+                    inputMode="numeric"
+                    className={inputBase}
+                    value={peopleCount}
+                    onChange={(e) => setPeopleCount(e.target.value)}
+                    placeholder="Ej. 15"
+                    required
+                  />
+                  <p className="text-xs text-ink-muted">
+                    $
+                    {(selected.price_per_person ?? 0).toLocaleString("es-CL")} por persona, sobre un base de
+                    ${selected.price.toLocaleString("es-CL")}.
+                  </p>
+                </div>
+              )}
 
               <div className="flex flex-col gap-1.5">
                 <label htmlFor="phone" className="text-sm font-medium text-ink-muted">
@@ -230,7 +277,11 @@ export default function ClienteSolicitar() {
 
             <div className="mt-3 flex items-center justify-between">
               <span className="font-data text-lg font-semibold text-ink">
-                {estimate?.price != null ? `$${estimate.price.toLocaleString("es-CL")}` : "Falta la ruta"}
+                {estimate?.price != null
+                  ? `$${estimate.price.toLocaleString("es-CL")}`
+                  : selected.pricing_type === "per_person"
+                    ? "Falta la cantidad de personas"
+                    : "Falta la ruta"}
                 {estimate?.km != null && (
                   <span className="ml-2 text-sm font-normal text-ink-muted">
                     (~{estimate.km.toFixed(1)} km)

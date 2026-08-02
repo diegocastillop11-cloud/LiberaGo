@@ -180,6 +180,12 @@ export function RequestStatusCard({ request }: { request: ServiceRequest }) {
             <span className="text-ink">~{request.distance_km} km</span>
           </div>
         )}
+        {request.people_count != null && (
+          <div className="flex justify-between gap-4 border-b border-line py-2.5 text-sm">
+            <span className="text-ink-muted">Personas</span>
+            <span className="text-ink">{request.people_count}</span>
+          </div>
+        )}
         <div className="flex justify-between gap-4 py-2.5 text-sm">
           <span className="text-ink-muted">Costo</span>
           <span className="font-data font-medium text-ink">${request.price.toLocaleString("es-CL")}</span>

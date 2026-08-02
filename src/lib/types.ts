@@ -32,7 +32,7 @@ export type WorkerNote = {
   created_at: string;
 };
 
-export type PricingType = "fixed" | "distance";
+export type PricingType = "fixed" | "distance" | "per_person";
 
 export type Service = {
   id: string;
@@ -43,6 +43,7 @@ export type Service = {
   active: boolean;
   pricing_type: PricingType;
   price_per_km: number | null;
+  price_per_person: number | null;
   created_at: string;
 };
 
@@ -53,6 +54,7 @@ export type ServiceRequest = {
   price: number;
   locations: ServiceLocation[];
   distance_km: number | null;
+  people_count: number | null;
   client_id: string;
   client_name: string;
   client_phone: string | null;

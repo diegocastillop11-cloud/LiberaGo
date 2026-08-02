@@ -14,6 +14,7 @@ const emptyForm = {
   price: "",
   pricingType: "fixed" as PricingType,
   pricePerKm: "",
+  pricePerPerson: "",
   locationLabels: ["Dirección del servicio"],
 };
 
@@ -51,6 +52,7 @@ export default function AdminServices() {
       price: String(service.price),
       pricingType: service.pricing_type,
       pricePerKm: service.price_per_km != null ? String(service.price_per_km) : "",
+      pricePerPerson: service.price_per_person != null ? String(service.price_per_person) : "",
       locationLabels: service.location_labels,
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -108,6 +110,15 @@ export default function AdminServices() {
       }
     }
 
+    let pricePerPerson: number | null = null;
+    if (form.pricingType === "per_person") {
+      pricePerPerson = Number(form.pricePerPerson);
+      if (!Number.isFinite(pricePerPerson) || pricePerPerson < 0) {
+        setError("Completa un precio por persona válido.");
+        return;
+      }
+    }
+
     setSaving(true);
     const payload = {
       name: form.name.trim(),
@@ -115,6 +126,7 @@ export default function AdminServices() {
       price,
       pricing_type: form.pricingType,
       price_per_km: pricePerKm,
+      price_per_person: pricePerPerson,
       location_labels: locationLabels,
     };
 
@@ -208,6 +220,17 @@ export default function AdminServices() {
               >
                 Por distancia (recogida → destino)
               </button>
+              <button
+                type="button"
+                onClick={() => setPricingType("per_person")}
+                className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
+                  form.pricingType === "per_person"
+                    ? "bg-action text-on-action"
+                    : "bg-surface-2 text-ink-muted hover:text-ink"
+                }`}
+              >
+                Por persona
+              </button>
             </div>
           </div>
 
@@ -227,7 +250,9 @@ export default function AdminServices() {
             </div>
             <div className="flex flex-col gap-1.5">
               <label htmlFor="price" className="text-sm font-medium text-ink-muted">
-                {form.pricingType === "distance" ? "Precio base (CLP)" : "Precio (CLP)"}
+                {form.pricingType === "distance" || form.pricingType === "per_person"
+                  ? "Precio base (CLP)"
+                  : "Precio (CLP)"}
               </label>
               <input
                 id="price"
@@ -257,6 +282,25 @@ export default function AdminServices() {
                   value={form.pricePerKm}
                   onChange={(e) => setForm((f) => ({ ...f, pricePerKm: e.target.value }))}
                   placeholder="500"
+                  required
+                />
+              </div>
+            )}
+            {form.pricingType === "per_person" && (
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="pricePerPerson" className="text-sm font-medium text-ink-muted">
+                  Precio por persona (CLP)
+                </label>
+                <input
+                  id="pricePerPerson"
+                  className={inputBase}
+                  type="number"
+                  min="0"
+                  step="1"
+                  inputMode="numeric"
+                  value={form.pricePerPerson}
+                  onChange={(e) => setForm((f) => ({ ...f, pricePerPerson: e.target.value }))}
+                  placeholder="10000"
                   required
                 />
               </div>
@@ -362,6 +406,8 @@ export default function AdminServices() {
                     ${service.price.toLocaleString("es-CL")}
                     {service.pricing_type === "distance" &&
                       ` + $${(service.price_per_km ?? 0).toLocaleString("es-CL")}/km`}
+                    {service.pricing_type === "per_person" &&
+                      ` + $${(service.price_per_person ?? 0).toLocaleString("es-CL")}/persona`}
                   </p>
                   <p className="mt-1 text-xs text-ink-muted">
                     {service.pricing_type === "distance"

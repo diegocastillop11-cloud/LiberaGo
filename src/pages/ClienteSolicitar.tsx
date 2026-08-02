@@ -169,7 +169,7 @@ export default function ClienteSolicitar() {
                 <button
                   key={service.id}
                   onClick={() => selectService(service)}
-                  className={`${cardBase} flex items-center justify-between gap-4 text-left transition-colors hover:border-action`}
+                  className={`${cardBase} flex flex-col items-start gap-3 text-left transition-colors hover:border-action sm:flex-row sm:items-center sm:justify-between sm:gap-4`}
                 >
                   <div>
                     <p className="font-semibold text-ink">{service.name}</p>

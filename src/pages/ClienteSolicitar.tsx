@@ -7,7 +7,6 @@ import { LocationPicker, type LocationValue } from "../components/LocationPicker
 import { AppHeader } from "../components/AppHeader";
 import { btnPrimary, btnGhost, inputBase, cardBase } from "../lib/ui";
 import { haversineKm } from "../lib/geo";
-import { startCheckout } from "../lib/checkout";
 
 const emptyLocation: LocationValue = { address: "", lat: null, lng: null };
 
@@ -109,11 +108,13 @@ export default function ClienteSolicitar() {
 
     // Navegamos a la pantalla de seguimiento ANTES de redirigir a MercadoPago
     // (no despues) — asi, si el cliente se arrepiente y vuelve atras con el
-    // navegador, aterriza en una pantalla con mensaje claro y un boton
-    // "Pagar ahora" para reintentar, no en este formulario congelado a mitad
-    // de la redireccion (lo que mostraba antes, ver bug reportado 2026-08-02).
-    navigate(`/cliente/solicitudes/${data.id}`, { replace: true });
-    await startCheckout(data.id);
+    // navegador, aterriza en una pantalla con mensaje claro, no en este
+    // formulario congelado a mitad de la redireccion (bug reportado
+    // 2026-08-02). El checkout en si lo dispara RequestStatusCard al ver
+    // justCreated=true — asi evitamos la carrera entre esta navegacion y el
+    // fetch de startCheckout, que hacia parpadear el mensaje de "el pago no
+    // se completo" antes de siquiera haber ido a MercadoPago.
+    navigate(`/cliente/solicitudes/${data.id}`, { replace: true, state: { justCreated: true } });
   }
 
   return (

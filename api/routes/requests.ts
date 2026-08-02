@@ -94,6 +94,36 @@ requestsRouter.post("/:id/refund", async (req, res) => {
   }
 });
 
+// Cancela una solicitud propia que todavia no se pago — nunca se cobro
+// nada, asi que no hay nada que reembolsar. Solo aplica en 'pendiente_pago';
+// una vez pagada, cancelarla pasa por Admin (y el reembolso del 100% ya
+// construido), no por el cliente directamente.
+requestsRouter.post("/:id/cancel", async (req, res) => {
+  const userId = await getAuthedUserId(req);
+  if (!userId) {
+    res.status(401).json({ error: "No autorizado" });
+    return;
+  }
+
+  const { data: request } = await supabaseAdmin
+    .from("requests")
+    .select("id, client_id, status")
+    .eq("id", req.params.id)
+    .single();
+
+  if (!request || request.client_id !== userId || request.status !== "pendiente_pago") {
+    res.status(409).json({ error: "Esta solicitud ya no se puede cancelar" });
+    return;
+  }
+
+  const { error } = await supabaseAdmin.from("requests").update({ status: "cancelado" }).eq("id", request.id);
+  if (error) {
+    res.status(500).json({ error: error.message });
+    return;
+  }
+  res.json({ ok: true });
+});
+
 requestsRouter.post("/:id/skip", async (req, res) => {
   const userId = await getAuthedUserId(req);
   if (!userId) {

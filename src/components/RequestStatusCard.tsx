@@ -1,8 +1,8 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import type { ServiceRequest } from "../lib/types";
-import { btnPrimary } from "../lib/ui";
-import { startCheckout } from "../lib/checkout";
+import { btnGhost, btnPrimary } from "../lib/ui";
+import { cancelUnpaidRequest, startCheckout } from "../lib/checkout";
 
 function TerminosLink() {
   return (
@@ -22,16 +22,7 @@ const STEP_LABELS: Record<(typeof STEP_ORDER)[number], string> = {
 
 export function RequestStatusCard({ request }: { request: ServiceRequest }) {
   if (request.status === "pendiente_pago") {
-    return (
-      <div className="rounded-lg border border-line bg-surface p-6">
-        <p className="font-display text-lg font-semibold text-ink">{request.service_name}</p>
-        <p className="mt-2 text-sm text-ink-muted">
-          El pago de esta solicitud no se completó — no se le ofrece a ningún trabajador hasta que se
-          confirme. Si te arrepentiste o algo falló al pagar, puedes intentarlo de nuevo.
-        </p>
-        <RetryPaymentButton requestId={request.id} />
-      </div>
-    );
+    return <PendingPaymentCard request={request} />;
   }
 
   if (request.status === "cancelado") {
@@ -198,6 +189,63 @@ export function RequestStatusCard({ request }: { request: ServiceRequest }) {
   );
 }
 
+// Distingue dos situaciones muy distintas que antes compartian el mismo
+// mensaje de error:
+// 1. La solicitud se acaba de crear (justCreated, via location.state) y
+//    todavia no se intento ningun pago — se dispara el checkout solo, sin
+//    asustar al cliente con un mensaje de "no se completo" que no aplica
+//    todavia (bug reportado 2026-08-02: se veia ese mensaje un instante
+//    antes de siquiera llegar a MercadoPago).
+// 2. El cliente volvio despues de abandonar o de que el pago fallara — ahi
+//    si corresponde el mensaje de error + boton para reintentar.
+function PendingPaymentCard({ request }: { request: ServiceRequest }) {
+  const location = useLocation();
+  const justCreated = Boolean((location.state as { justCreated?: boolean } | null)?.justCreated);
+
+  const [autoStatus, setAutoStatus] = useState<"redirecting" | "idle">(justCreated ? "redirecting" : "idle");
+  const [autoError, setAutoError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (autoStatus !== "redirecting") return;
+    let cancelled = false;
+    startCheckout(request.id).then((err) => {
+      if (cancelled) return;
+      if (err) {
+        setAutoError(err);
+        setAutoStatus("idle");
+      }
+      // si no hay error, startCheckout ya redirigio a MercadoPago — la
+      // pagina esta a punto de navegar fuera, no hace falta tocar estado.
+    });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoStatus, request.id]);
+
+  return (
+    <div className="rounded-lg border border-line bg-surface p-6">
+      <p className="font-display text-lg font-semibold text-ink">{request.service_name}</p>
+
+      {autoStatus === "redirecting" ? (
+        <p className="mt-2 text-sm text-ink-muted">Te estamos redirigiendo a Mercado Pago para pagar…</p>
+      ) : (
+        <>
+          <p className="mt-2 text-sm text-ink-muted">
+            {autoError
+              ? `No se pudo iniciar el pago: ${autoError}`
+              : "El pago de esta solicitud no se completó — no se le ofrece a ningún trabajador hasta que se confirme. Si te arrepentiste o algo falló al pagar, puedes intentarlo de nuevo o cancelarla."}
+          </p>
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <RetryPaymentButton requestId={request.id} />
+            <CancelUnpaidButton requestId={request.id} />
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 function RetryPaymentButton({ requestId }: { requestId: string }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -213,10 +261,38 @@ function RetryPaymentButton({ requestId }: { requestId: string }) {
   }
 
   return (
-    <div className="mt-4">
+    <div>
       {error && <p className="mb-2 text-sm text-error">{error}</p>}
       <button className={btnPrimary} onClick={retry} disabled={loading}>
         {loading ? "Redirigiendo…" : "Pagar ahora"}
+      </button>
+    </div>
+  );
+}
+
+function CancelUnpaidButton({ requestId }: { requestId: string }) {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function cancel() {
+    if (!window.confirm("¿Cancelar esta solicitud? No se te va a cobrar nada.")) return;
+    setLoading(true);
+    setError(null);
+    const cancelError = await cancelUnpaidRequest(requestId);
+    if (cancelError) {
+      setLoading(false);
+      setError(cancelError);
+      return;
+    }
+    navigate("/cliente");
+  }
+
+  return (
+    <div>
+      {error && <p className="mb-2 text-sm text-error">{error}</p>}
+      <button className={btnGhost} onClick={cancel} disabled={loading}>
+        {loading ? "Cancelando…" : "Cancelar y elegir otro servicio"}
       </button>
     </div>
   );

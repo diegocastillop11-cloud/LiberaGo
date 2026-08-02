@@ -73,7 +73,7 @@ export default function ClienteSolicitudes() {
               <Link
                 key={r.id}
                 to={`/cliente/solicitudes/${r.id}`}
-                className={`${cardBase} flex items-center justify-between gap-4 transition-colors hover:border-action`}
+                className={`${cardBase} flex flex-col items-start gap-2 transition-colors hover:border-action sm:flex-row sm:items-center sm:justify-between sm:gap-4`}
               >
                 <div>
                   <p className="font-semibold text-ink">{r.service_name}</p>

@@ -87,6 +87,9 @@ export default function Landing() {
             <Link to="/trabajador" className={navLink}>
               Trabaja con nosotros
             </Link>
+            <Link to="/terminos" className={navLink}>
+              Términos y Condiciones
+            </Link>
           </nav>
           <div className="flex items-center gap-3">
             {!loading &&
@@ -132,7 +135,11 @@ export default function Landing() {
               </div>
               <p className="mt-4 text-sm text-ink-muted">
                 Pagas en línea con Mercado Pago al pedir el servicio — nada de coordinar plata en
-                persona.
+                persona. Revisa nuestros{" "}
+                <Link to="/terminos" className="text-action underline-offset-4 hover:underline">
+                  Términos y Condiciones
+                </Link>
+                .
               </p>
             </div>
 

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/AuthContext";
 import { Logo } from "../components/Logo";
 import type { Profile } from "../lib/types";
-import { btnPrimary, btnSecondary, inputBase } from "../lib/ui";
+import { btnPrimary, btnSecondary, btnGhost, inputBase } from "../lib/ui";
 
 const MIN_PASSWORD_LENGTH = 8;
 const SIGNUP_INTENT_KEY = "liberago_signup_intent";
@@ -102,7 +102,14 @@ export default function Login() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-bg px-6">
       <div className="w-full max-w-[400px] rounded-lg border border-line bg-surface p-8">
-        <div className="flex justify-center">
+        <button
+          type="button"
+          className={`${btnGhost} !px-0`}
+          onClick={() => navigate(-1)}
+        >
+          ← Volver
+        </button>
+        <div className="mt-3 flex justify-center">
           <Logo className="h-9" />
         </div>
         <h1 className="mt-4 font-display text-2xl font-semibold text-ink">

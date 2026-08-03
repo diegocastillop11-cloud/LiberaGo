@@ -102,7 +102,9 @@ export default function Login() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-bg px-6">
       <div className="w-full max-w-[400px] rounded-lg border border-line bg-surface p-8">
-        <Logo className="h-9" />
+        <div className="flex justify-center">
+          <Logo className="h-9" />
+        </div>
         <h1 className="mt-4 font-display text-2xl font-semibold text-ink">
           {mode === "signin" ? "Inicia sesión" : "Crea tu cuenta"}
         </h1>

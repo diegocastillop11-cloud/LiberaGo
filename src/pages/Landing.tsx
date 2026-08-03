@@ -140,6 +140,7 @@ export default function Landing() {
             </div>
 
             <div>
+              <Logo className="mb-8 h-20" linkTo={null} />
               <p className="mb-3 text-xs font-semibold uppercase tracking-[0.08em] text-confirmed-ink">
                 Así se ve tu pedido, en vivo
               </p>

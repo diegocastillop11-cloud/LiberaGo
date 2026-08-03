@@ -1,5 +1,7 @@
 export type WorkerStatus = "none" | "pending" | "approved" | "rejected";
 
+export type IdentityStatus = "none" | "pending" | "verified" | "declined";
+
 export type Profile = {
   id: string;
   email: string;
@@ -7,6 +9,9 @@ export type Profile = {
   avatar_url: string | null;
   is_admin: boolean;
   worker_status: WorkerStatus;
+  identity_status: IdentityStatus;
+  identity_session_id: string | null;
+  identity_verified_at: string | null;
   created_at: string;
 };
 

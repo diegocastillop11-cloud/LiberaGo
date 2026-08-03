@@ -3,6 +3,7 @@ import { Receiver } from "@upstash/qstash";
 import { supabaseAdmin } from "../_lib/supabase.js";
 import { dispatchToApprovedWorkers, offerToNextWorker } from "../_lib/offerDispatch.js";
 import { getPayment, verifyMpSignature } from "../_lib/mercadopago.js";
+import { verifyDiditSignature } from "../_lib/didit.js";
 
 export const webhooksRouter = Router();
 
@@ -85,6 +86,65 @@ webhooksRouter.post("/mercadopago-payment", async (req, res) => {
     console.error("[mercadopago-payment] error:", err instanceof Error ? err.message : err);
     res.sendStatus(200);
   }
+});
+
+// Notificacion de Didit cuando cambia el estado de una sesion de
+// verificacion de identidad. A diferencia del webhook de MercadoPago (que es
+// fail-open a proposito, ver CLAUDE.md), este es fail-closed desde el dia 1:
+// sin DIDIT_WEBHOOK_SECRET_KEY configurado, se rechaza (401) en vez de
+// aceptar sin verificar.
+webhooksRouter.post("/didit-verification", async (req, res) => {
+  const secret = process.env.DIDIT_WEBHOOK_SECRET_KEY;
+  if (!secret) {
+    res.status(401).json({ error: "No autorizado" });
+    return;
+  }
+
+  const signature = req.headers["x-signature-simple"] as string | undefined;
+  const timestamp = req.headers["x-timestamp"] as string | undefined;
+  const { session_id, vendor_data, status, webhook_type } = req.body ?? {};
+
+  if (!verifyDiditSignature(secret, signature, timestamp, session_id, status, webhook_type)) {
+    res.status(401).json({ error: "Firma inválida" });
+    return;
+  }
+
+  if (webhook_type !== "status.updated" || !vendor_data) {
+    res.sendStatus(200);
+    return;
+  }
+
+  const newStatus: "verified" | "declined" | "pending" =
+    status === "Approved"
+      ? "verified"
+      : ["Declined", "Abandoned", "Expired", "Kyc Expired"].includes(status)
+        ? "declined"
+        : "pending";
+
+  const { data: profile } = await supabaseAdmin
+    .from("profiles")
+    .select("identity_session_id")
+    .eq("id", vendor_data)
+    .single();
+
+  // Ignora webhooks de una sesion vieja: si el usuario reintento la
+  // verificacion, solo la sesion mas reciente (la guardada en profiles)
+  // puede actualizar el estado — evita que una respuesta tardia de una
+  // sesion abandonada pise el resultado de un reintento posterior.
+  if (!profile || profile.identity_session_id !== session_id) {
+    res.sendStatus(200);
+    return;
+  }
+
+  await supabaseAdmin
+    .from("profiles")
+    .update({
+      identity_status: newStatus,
+      ...(newStatus === "verified" ? { identity_verified_at: new Date().toISOString() } : {}),
+    })
+    .eq("id", vendor_data);
+
+  res.sendStatus(200);
 });
 
 // Llamado por QStash 10s despues de ofrecer la solicitud a un trabajador.

@@ -6,9 +6,13 @@ export function UserBadge({ profile }: { profile: Profile | null }) {
 
   return (
     <div className="hidden items-center gap-2 sm:flex">
-      <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-action text-xs font-semibold text-on-action">
-        {initial}
-      </span>
+      {profile?.avatar_url ? (
+        <img src={profile.avatar_url} alt="" className="h-7 w-7 flex-shrink-0 rounded-full object-cover" />
+      ) : (
+        <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-action text-xs font-semibold text-on-action">
+          {initial}
+        </span>
+      )}
       <span className="text-sm font-semibold text-ink">{label}</span>
     </div>
   );

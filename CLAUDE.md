@@ -125,6 +125,32 @@ crearla). Sin `MP_WEBHOOK_SECRET` configurado, el endpoint acepta cualquier
 notificación sin verificar firma (fail-open deliberado para poder probar en
 preview antes de tener el webhook real armado) — nunca dejar así en
 producción.
+
+### Variables requeridas — verificación de identidad con Didit (2026-08-03)
+Igual que MercadoPago: sin `DIDIT_API_KEY`/`DIDIT_WORKFLOW_ID` el endpoint de
+verificación falla explícito al intentar crear una sesión — bloquea que un
+trabajador sea aprobado y que un cliente haga una segunda solicitud (ver
+`0016_identity_verification.sql`), pero no bloquea la primera solicitud del
+cliente (esa es la "primera cosa visible" de Fase 0, se decidió a propósito
+no ponerle fricción).
+```
+DIDIT_API_KEY              # secreta, solo backend — dashboard de Didit (didit.me) > API Keys
+DIDIT_WORKFLOW_ID           # UUID del workflow de verificación configurado en Didit (documento + selfie/liveness)
+DIDIT_WEBHOOK_SECRET_KEY    # secreto para verificar la firma HMAC del webhook — dashboard de Didit > Webhook destination
+```
+Falta crear a mano en el dashboard de Didit un webhook destination apuntando
+a `https://<dominio>/api/webhooks/didit-verification`; el `secret_shared_key`
+que Didit entrega ahí es `DIDIT_WEBHOOK_SECRET_KEY`. A diferencia del webhook
+de MercadoPago (fail-open documentado arriba), este es **fail-closed desde
+el día 1**: sin `DIDIT_WEBHOOK_SECRET_KEY` configurado, el endpoint responde
+401 en vez de aceptar sin verificar — no repetir el wart de MP acá.
+
+No guardamos el documento de identidad ni el RUN en nuestra base — solo el
+veredicto (`profiles.identity_status`) y el id de la sesión de Didit. El
+proveedor solo cubre 220+ países de forma genérica; si Didit resulta no
+reconocer bien la cédula chilena en la práctica, es la señal para evaluar
+otro proveedor (decisión de sesión futura, no bloquea el lanzamiento del
+resto de la app).
 ## Reglas generales
 1. Leer archivos antes de escribir código.
 2. Preferir edición sobre reescritura completa.

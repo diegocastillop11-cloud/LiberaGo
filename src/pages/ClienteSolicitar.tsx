@@ -17,6 +17,7 @@ export default function ClienteSolicitar() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<Service | null>(null);
+  const [needsIdentity, setNeedsIdentity] = useState(false);
   const [locationValues, setLocationValues] = useState<LocationValue[]>([]);
   const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
@@ -41,6 +42,7 @@ export default function ClienteSolicitar() {
     setLocationValues(service.location_labels.map(() => emptyLocation));
     setPeopleCount("");
     setError(null);
+    setNeedsIdentity(false);
   }
 
   function updateLocationValue(index: number, value: LocationValue) {
@@ -122,6 +124,7 @@ export default function ClienteSolicitar() {
 
     if (error) {
       setSubmitting(false);
+      setNeedsIdentity(error.message.includes("Verifica tu identidad"));
       setError(error.message);
       return;
     }
@@ -154,7 +157,12 @@ export default function ClienteSolicitar() {
 
         {error && (
           <div className="mt-4 rounded-sm border border-error bg-error/10 px-4 py-3 text-sm text-error">
-            {error}
+            <p>{error}</p>
+            {needsIdentity && (
+              <Link to="/verificacion" className="mt-2 inline-block font-medium underline underline-offset-4">
+                Verificar mi identidad
+              </Link>
+            )}
           </div>
         )}
 

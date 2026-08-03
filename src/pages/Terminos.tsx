@@ -13,11 +13,30 @@ const secciones = [
   {
     title: "2. Cuentas y verificación",
     body: [
-      "Para usar LiberaGo necesitas iniciar sesión con una cuenta válida. Para ofrecer servicios como Trabajador, además debes postular dentro de la app y ser aprobado por un administrador.",
+      "Para usar LiberaGo necesitas iniciar sesión con una cuenta válida. Al crear tu cuenta, confirmas que aceptas estos Términos y Condiciones, incluyendo las secciones 3 y 4 sobre verificación de identidad y datos personales.",
+      "Para ofrecer servicios como Trabajador, además debes postular dentro de la app, verificar tu identidad, subir una foto de perfil y ser aprobado por un administrador — los tres requisitos son obligatorios, no basta con uno solo.",
     ],
   },
   {
-    title: "3. Cómo funciona el pago",
+    title: "3. Verificación de identidad",
+    body: [
+      "LiberaGo verifica la identidad de Clientes y Trabajadores para que ambas partes sepan con quién están tratando — un Trabajador entra a espacios del Cliente o recibe su pago, y un Cliente recibe en su casa a alguien que dice ser quien dice ser.",
+      "Esta verificación (documento de identidad, selfie y comparación biométrica) la realiza un proveedor externo especializado (Didit), no LiberaGo directamente. LiberaGo no almacena tu documento de identidad ni tu RUN — solo guarda si la verificación quedó aprobada o no, y una referencia interna a la sesión de verificación, nunca el documento ni la foto en sí.",
+      "El Trabajador debe verificar su identidad antes de que un administrador pueda aprobar su postulación. El Cliente puede crear su primera solicitud sin verificarse, pero debe verificar su identidad antes de crear una segunda solicitud.",
+      "La verificación requiere ser mayor de 18 años. Si la verificación es rechazada, puedes volver a intentarlo.",
+    ],
+  },
+  {
+    title: "4. Protección de datos personales",
+    body: [
+      "Los datos que LiberaGo guarda sobre ti son: tu correo, nombre, teléfono de contacto (si lo entregas al crear una solicitud), tu foto de perfil, el resultado de tu verificación de identidad, y el historial de tus solicitudes.",
+      "Estos datos se usan únicamente para operar la plataforma — conectar Clientes con Trabajadores, procesar pagos y confirmar identidad — y no se venden ni se comparten con terceros salvo los proveedores necesarios para operar (MercadoPago para pagos, Didit para verificación de identidad).",
+      "Tu foto de perfil es visible para la otra parte de una solicitud (el Cliente ve la foto del Trabajador asignado y viceversa) — es información pensada para generar confianza, no es privada dentro de ese contexto.",
+      "Puedes pedir la eliminación de tu cuenta y tus datos contactando a LiberaGo, salvo la información que la ley obligue a conservar (por ejemplo, registros de pagos).",
+    ],
+  },
+  {
+    title: "5. Cómo funciona el pago",
     body: [
       "El pago del servicio se realiza en línea, a través de MercadoPago, al momento de crear la solicitud — antes de que cualquier Trabajador pueda verla o aceptarla.",
       "Una solicitud no se ofrece a ningún Trabajador hasta que el pago quede confirmado. Si el pago no se completa (por ejemplo, si cancelas el proceso o el pago es rechazado), la solicitud queda pendiente y puedes reintentar el pago o abandonarla.",
@@ -25,13 +44,13 @@ const secciones = [
     ],
   },
   {
-    title: "4. Estados de una solicitud",
+    title: "6. Estados de una solicitud",
     body: [
       "Una solicitud pasa por los siguientes estados: pendiente de pago, solicitado, asignado, en curso y completado. También puede terminar como cancelado (LiberaGo decide no continuarla, generalmente antes de que un Trabajador la tome) o no completado (un Trabajador intentó hacerla pero no se pudo).",
     ],
   },
   {
-    title: "5. Reembolsos",
+    title: "7. Reembolsos",
     body: [
       "Si tu solicitud queda marcada como no completado por una causa de fuerza mayor ajena al Trabajador y al Cliente (por ejemplo, el lugar del trámite cerró antes de tiempo, la institución canceló el trámite, un accidente, etc.), tienes derecho a un reembolso del 50% de lo pagado. El otro 50% cubre el tiempo y los recursos que el Trabajador ya invirtió en el intento.",
       "Este reembolso del 50% no aplica si la solicitud no se completó por una causa atribuible al Cliente — por ejemplo, no estar presente cuando correspondía, entregar una dirección o información incorrecta, o arrepentirse después de que el Trabajador ya inició el servicio. En esos casos el Trabajador igualmente gastó su tiempo y sus recursos, y no corresponde reembolso.",
@@ -41,21 +60,21 @@ const secciones = [
     ],
   },
   {
-    title: "6. Uso indebido y fraude",
+    title: "8. Uso indebido y fraude",
     body: [
       "La cláusula de reembolso del 50% existe para cubrir casos genuinos de fuerza mayor, no como una forma de recuperar parte del pago de una solicitud que un Cliente ya no quiere o de la que se arrepintió — el Trabajador gasta tiempo y recursos reales en cada intento, se complete o no.",
       "LiberaGo puede rechazar un reembolso, suspender una cuenta o negar el acceso a la plataforma si detecta un patrón de solicitudes creadas de mala fe — por ejemplo, para intentar obtener reembolsos sin una causa real de fuerza mayor.",
     ],
   },
   {
-    title: "7. Responsabilidad",
+    title: "9. Responsabilidad",
     body: [
       "LiberaGo pone el cuidado razonable en verificar a los Trabajadores antes de que aparezcan en la plataforma, pero no garantiza el resultado de cada trámite o mandado — eso depende de factores fuera de nuestro control (por ejemplo, el funcionamiento de la institución donde se hace el trámite).",
       "Cualquier problema con un Trabajador o con un Cliente durante un servicio puede reportarse a LiberaGo para revisión.",
     ],
   },
   {
-    title: "8. Cambios a estos términos",
+    title: "10. Cambios a estos términos",
     body: [
       "Estos términos pueden actualizarse a medida que la plataforma evoluciona. Los cambios aplican a las solicitudes creadas después de la actualización.",
     ],

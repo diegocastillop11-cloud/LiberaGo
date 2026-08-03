@@ -57,7 +57,12 @@ export function RequireAuth({
   if (require === "worker" && !profile?.is_admin && profile?.worker_status !== "approved") {
     return (
       <Screen>
-        <WorkerGate status={profile?.worker_status ?? "none"} onApplied={refreshProfile} />
+        <WorkerGate
+          status={profile?.worker_status ?? "none"}
+          identityVerified={profile?.identity_status === "verified"}
+          hasAvatar={!!profile?.avatar_url}
+          onApplied={refreshProfile}
+        />
       </Screen>
     );
   }
@@ -65,13 +70,62 @@ export function RequireAuth({
   return <>{children}</>;
 }
 
+// Un admin no puede aprobar a alguien sin identidad verificada (ver
+// set_worker_status en 0016_identity_verification.sql) — este CTA se
+// muestra ademas del estado de la postulación, no en su lugar, porque
+// ambos pasos (postular + verificar) son independientes y pueden hacerse
+// en cualquier orden.
+function IdentityCta() {
+  return (
+    <Link to="/verificacion" className={btnPrimary}>
+      Verificar mi identidad
+    </Link>
+  );
+}
+
+// Un admin tampoco puede aprobar a alguien sin foto de perfil (ver
+// set_worker_status en 0017_avatar_upload.sql) — mismo motivo que
+// IdentityCta: pasos independientes, cualquier orden.
+function AvatarCta() {
+  return (
+    <Link to="/perfil" className={btnPrimary}>
+      Subir foto de perfil
+    </Link>
+  );
+}
+
 function WorkerGate({
   status,
+  identityVerified,
+  hasAvatar,
   onApplied,
 }: {
   status: "none" | "pending" | "rejected";
+  identityVerified: boolean;
+  hasAvatar: boolean;
   onApplied: () => void;
 }) {
+  const pendingSteps = (
+    <>
+      {!identityVerified && (
+        <>
+          <p className="text-sm text-ink-muted">
+            Un admin no puede aprobarte hasta que verifiques tu identidad.
+          </p>
+          <IdentityCta />
+        </>
+      )}
+      {!hasAvatar && (
+        <>
+          <p className="text-sm text-ink-muted">
+            Un admin no puede aprobarte hasta que subas una foto de perfil.
+          </p>
+          <AvatarCta />
+        </>
+      )}
+    </>
+  );
+
   if (status === "pending") {
     return (
       <>
@@ -79,6 +133,7 @@ function WorkerGate({
         <p className="text-sm text-ink-muted">
           Ya pediste ser trabajador. Te avisamos apenas un admin la revise.
         </p>
+        {pendingSteps}
       </>
     );
   }
@@ -97,9 +152,11 @@ function WorkerGate({
     <>
       <p className="font-display text-xl font-semibold text-ink">Todavía no eres trabajador</p>
       <p className="text-sm text-ink-muted">
-        Postula y un admin revisa tu solicitud antes de darte acceso.
+        Postula y un admin revisa tu solicitud antes de darte acceso. También vas a necesitar
+        verificar tu identidad y subir una foto de perfil antes de que te aprueben.
       </p>
       <ApplyButton onApplied={onApplied} />
+      {pendingSteps}
     </>
   );
 }

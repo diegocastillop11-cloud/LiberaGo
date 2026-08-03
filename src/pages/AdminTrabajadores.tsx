@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import type { Profile, WorkerStatus } from "../lib/types";
+import type { IdentityStatus, Profile, WorkerStatus } from "../lib/types";
 import { AppHeader } from "../components/AppHeader";
 import { btnPrimary, btnGhost, btnDanger, cardBase } from "../lib/ui";
 
@@ -10,6 +10,13 @@ const STATUS_LABELS: Record<WorkerStatus, string> = {
   pending: "Pendiente",
   approved: "Aprobado",
   rejected: "Rechazado",
+};
+
+const IDENTITY_LABELS: Record<IdentityStatus, string> = {
+  none: "Identidad: sin verificar",
+  pending: "Identidad: en revisión",
+  verified: "Identidad: verificada",
+  declined: "Identidad: rechazada",
 };
 
 export default function AdminTrabajadores() {
@@ -81,22 +88,46 @@ export default function AdminTrabajadores() {
           <p className="mt-4 text-sm text-ink-muted">No hay postulaciones pendientes.</p>
         ) : (
           <div className="mt-4 flex flex-col gap-3">
-            {pending.map((p) => (
-              <div key={p.id} className={`${cardBase} flex items-center justify-between gap-4`}>
-                <div>
-                  <p className="font-semibold text-ink">{p.full_name ?? p.email}</p>
-                  <p className="mt-0.5 text-xs text-ink-muted">{p.email}</p>
+            {pending.map((p) => {
+              const canApprove = p.identity_status === "verified" && !!p.avatar_url;
+              const missing = [
+                p.identity_status !== "verified" && "identidad",
+                !p.avatar_url && "foto de perfil",
+              ].filter(Boolean);
+              return (
+                <div key={p.id} className={`${cardBase} flex items-center justify-between gap-4`}>
+                  <div className="flex items-center gap-3">
+                    {p.avatar_url ? (
+                      <img src={p.avatar_url} alt="" className="h-10 w-10 flex-shrink-0 rounded-full object-cover" />
+                    ) : (
+                      <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-surface-2 text-xs text-ink-muted">
+                        Sin foto
+                      </span>
+                    )}
+                    <div>
+                      <p className="font-semibold text-ink">{p.full_name ?? p.email}</p>
+                      <p className="mt-0.5 text-xs text-ink-muted">{p.email}</p>
+                      <p className="mt-0.5 text-xs text-ink-muted">{IDENTITY_LABELS[p.identity_status]}</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-shrink-0 flex-col items-end gap-2">
+                    <div className="flex gap-2">
+                      <button
+                        className={btnPrimary}
+                        onClick={() => setStatus(p, "approved")}
+                        disabled={!canApprove}
+                        title={canApprove ? undefined : `Falta: ${missing.join(", ")}`}
+                      >
+                        Aprobar
+                      </button>
+                      <button className={btnDanger} onClick={() => setStatus(p, "rejected")}>
+                        Rechazar
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex flex-shrink-0 gap-2">
-                  <button className={btnPrimary} onClick={() => setStatus(p, "approved")}>
-                    Aprobar
-                  </button>
-                  <button className={btnDanger} onClick={() => setStatus(p, "rejected")}>
-                    Rechazar
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
@@ -109,6 +140,7 @@ export default function AdminTrabajadores() {
                   <div>
                     <p className="font-semibold text-ink">{p.full_name ?? p.email}</p>
                     <p className="mt-0.5 text-xs text-ink-muted">{p.email}</p>
+                    <p className="mt-0.5 text-xs text-ink-muted">{IDENTITY_LABELS[p.identity_status]}</p>
                   </div>
                   <span className="flex-shrink-0 text-sm text-ink-muted">
                     {STATUS_LABELS[p.worker_status]}

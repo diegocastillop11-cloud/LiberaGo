@@ -4,6 +4,7 @@ import { pushRouter } from "./_routes/push.js";
 import { webhooksRouter } from "./_routes/webhooks.js";
 import { requestsRouter } from "./_routes/requests.js";
 import { serviceSuggestionsRouter } from "./_routes/serviceSuggestions.js";
+import { identityRouter } from "./_routes/identity.js";
 
 const app = express();
 app.use(
@@ -22,5 +23,6 @@ app.use("/api/push", pushRouter);
 app.use("/api/webhooks", webhooksRouter);
 app.use("/api/requests", requestsRouter);
 app.use("/api/service-suggestions", serviceSuggestionsRouter);
+app.use("/api/identity", identityRouter);
 
 export default app;

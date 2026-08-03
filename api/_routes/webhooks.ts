@@ -1,8 +1,8 @@
 import { Router, type Request } from "express";
 import { Receiver } from "@upstash/qstash";
-import { supabaseAdmin } from "../lib/supabase.js";
-import { dispatchToApprovedWorkers, offerToNextWorker } from "../lib/offerDispatch.js";
-import { getPayment, verifyMpSignature } from "../lib/mercadopago.js";
+import { supabaseAdmin } from "../_lib/supabase.js";
+import { dispatchToApprovedWorkers, offerToNextWorker } from "../_lib/offerDispatch.js";
+import { getPayment, verifyMpSignature } from "../_lib/mercadopago.js";
 
 export const webhooksRouter = Router();
 

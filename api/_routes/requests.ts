@@ -1,8 +1,8 @@
 import { Router, type Request } from "express";
-import { supabaseAdmin } from "../lib/supabase.js";
-import { getAuthedUserId } from "../lib/auth.js";
-import { dispatchToApprovedWorkers, offerToNextWorker } from "../lib/offerDispatch.js";
-import { createPaymentPreference, refundPayment } from "../lib/mercadopago.js";
+import { supabaseAdmin } from "../_lib/supabase.js";
+import { getAuthedUserId } from "../_lib/auth.js";
+import { dispatchToApprovedWorkers, offerToNextWorker } from "../_lib/offerDispatch.js";
+import { createPaymentPreference, refundPayment } from "../_lib/mercadopago.js";
 
 export const requestsRouter = Router();
 

@@ -62,9 +62,10 @@ Deploy es automático: push a una rama → preview en Vercel; push/merge a `mast
 ```
 api/
   index.ts        # Express app como función serverless (Vercel) — todo /api/* pasa por acá (ver vercel.json)
-  lib/
+  _lib/           # prefijo _ a propósito: ver Gotchas — evita que Vercel los cuente como funciones
     env.ts        # validación fail-fast de env vars del backend
     supabase.ts   # cliente Supabase con service_role key (solo backend)
+  _routes/        # routers de Express montados desde index.ts (mismo motivo del prefijo _)
 src/
   main.tsx        # entry point, valida env del frontend al cargar
   App.tsx         # rutas por rol: /cliente, /trabajador, /admin
@@ -87,7 +88,7 @@ SUPABASE_URL                  # mismo valor que VITE_SUPABASE_URL, usado en el b
 SUPABASE_SERVICE_ROLE_KEY     # service_role key (secreta) — Supabase dashboard > Settings > API, solo backend
 ```
 Validadas al boot (`src/lib/validateEnv.ts`, usado por `src/lib/env.ts` y
-`api/lib/env.ts`): trim, limpiar BOM, rechazar si contiene `\r` o `\n` —
+`api/_lib/env.ts`): trim, limpiar BOM, rechazar si contiene `\r` o `\n` —
 fail-fast con mensaje claro, no un error críptico downstream.
 En Vercel, las env vars de **preview están escopeadas por rama** — cada rama
 nueva sale "en negro" hasta agregarlas a mano para esa rama en Project
@@ -214,6 +215,30 @@ producción.
   alguien lo etiquetó en OSM. Si esto se vuelve un problema frecuente,
   reconsiderar Google Places/Mapbox (decisión de Fase 1, tiene costo/API
   key — ver DESIGN.md o pedirle al usuario).
+- **Vercel (plan Hobby) cuenta cada archivo `.ts` dentro de `api/` como una
+  función serverless separada, hasta un máximo de 12 — no solo `api/index.ts`.**
+  Qué pasó: al agregar `api/routes/serviceSuggestions.ts` (el archivo #13
+  bajo `api/`), el deploy empezó a fallar con `"No more than 12 Serverless
+  Functions can be added to a Deployment on the Hobby plan"`. El build
+  (`npm run build`) pasaba limpio — el error solo aparece en la fase
+  "Deploying outputs" de Vercel, no en `tsc`/`vite build` ni en CI local
+  normal. Por qué: pese a que `vercel.json` solo define un rewrite hacia
+  `/api` (pensado para que `api/index.ts` sea la única función, con Express
+  ruteando todo internamente), la detección automática de Vercel trata
+  *cualquier* archivo bajo `api/` — incluyendo `api/lib/*` y `api/routes/*`
+  — como un endpoint propio, a menos que esté excluido explícitamente. Ya
+  estábamos justo en el límite (12) antes de este cambio, así que no se
+  notó hasta que se sumó un archivo más. Cómo se arregló: renombrar
+  `api/lib/` → `api/_lib/` y `api/routes/` → `api/_routes/` — el prefijo
+  `_` es la convención documentada de Vercel para excluir archivos/carpetas
+  de la detección de funciones dentro de `api/`. Después del rename, `vercel
+  build` local solo genera una función (`api/index.func`). Cómo detectarlo
+  a futuro: `npx vercel build` local reproduce el build+empaquetado real
+  (a diferencia de `npm run build`) — si hay un error en "Deploying
+  outputs", correr `npx vercel deploy --prebuilt` local expone el mensaje
+  completo que el log del deploy vía GitHub a veces trunca. Cualquier
+  archivo `.ts` nuevo que se agregue directo bajo `api/` (no dentro de
+  `_lib/` o `_routes/`) vuelve a sumar a este límite.
 ## Backlog  después
 - [Ideas descartadas para ahora con motivo — evita reabrir sin evidencia
   nueva]

@@ -1,9 +1,9 @@
 import express from "express";
-import "./lib/env.js";
-import { pushRouter } from "./routes/push.js";
-import { webhooksRouter } from "./routes/webhooks.js";
-import { requestsRouter } from "./routes/requests.js";
-import { serviceSuggestionsRouter } from "./routes/serviceSuggestions.js";
+import "./_lib/env.js";
+import { pushRouter } from "./_routes/push.js";
+import { webhooksRouter } from "./_routes/webhooks.js";
+import { requestsRouter } from "./_routes/requests.js";
+import { serviceSuggestionsRouter } from "./_routes/serviceSuggestions.js";
 
 const app = express();
 app.use(

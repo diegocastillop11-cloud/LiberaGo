@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { supabaseAdmin } from "../lib/supabase.js";
-import { getAuthedUserId } from "../lib/auth.js";
+import { supabaseAdmin } from "../_lib/supabase.js";
+import { getAuthedUserId } from "../_lib/auth.js";
 
 export const pushRouter = Router();
 

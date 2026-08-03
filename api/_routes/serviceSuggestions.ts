@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { supabaseAdmin } from "../lib/supabase.js";
-import { getAuthedUserId } from "../lib/auth.js";
-import { sendPushToUser } from "../lib/push.js";
+import { supabaseAdmin } from "../_lib/supabase.js";
+import { getAuthedUserId } from "../_lib/auth.js";
+import { sendPushToUser } from "../_lib/push.js";
 
 export const serviceSuggestionsRouter = Router();
 

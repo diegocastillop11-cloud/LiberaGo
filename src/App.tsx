@@ -2,6 +2,7 @@ import { Routes, Route, Link } from "react-router-dom";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Terminos from "./pages/Terminos";
+import SugerirServicio from "./pages/SugerirServicio";
 import ClienteSolicitar from "./pages/ClienteSolicitar";
 import ClienteSolicitudes from "./pages/ClienteSolicitudes";
 import ClienteSolicitudDetalle from "./pages/ClienteSolicitudDetalle";
@@ -9,6 +10,7 @@ import TrabajadorDisponibles from "./pages/TrabajadorDisponibles";
 import AdminServices from "./pages/AdminServices";
 import AdminTrabajadores from "./pages/AdminTrabajadores";
 import AdminSolicitudes from "./pages/AdminSolicitudes";
+import AdminSugerencias from "./pages/AdminSugerencias";
 import { RequireAuth } from "./components/RequireAuth";
 
 function Placeholder({ title }: { title: string }) {
@@ -32,6 +34,7 @@ export default function App() {
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
       <Route path="/terminos" element={<Terminos />} />
+      <Route path="/sugerir-servicio" element={<SugerirServicio />} />
 
       <Route
         path="/cliente"
@@ -88,6 +91,15 @@ export default function App() {
         element={
           <RequireAuth require="admin">
             <AdminSolicitudes />
+          </RequireAuth>
+        }
+      />
+
+      <Route
+        path="/admin/sugerencias"
+        element={
+          <RequireAuth require="admin">
+            <AdminSugerencias />
           </RequireAuth>
         }
       />

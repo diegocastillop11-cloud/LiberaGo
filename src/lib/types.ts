@@ -47,6 +47,20 @@ export type Service = {
   created_at: string;
 };
 
+export type ServiceSuggestionStatus = "pending" | "approved" | "rejected";
+
+export type ServiceSuggestion = {
+  id: string;
+  client_id: string | null;
+  requester_name: string;
+  requester_contact: string;
+  service_name: string;
+  description: string;
+  status: ServiceSuggestionStatus;
+  created_at: string;
+  reviewed_at: string | null;
+};
+
 export type ServiceRequest = {
   id: string;
   service_id: string;

@@ -188,7 +188,15 @@ export default function ClienteSolicitar() {
               ))}
             </div>
           )
-        ) : (
+        ) : null}
+
+        {!selected && (
+          <Link to="/sugerir-servicio" className={`${btnGhost} !px-0 mt-6 inline-flex`}>
+            ¿No encuentras el servicio que necesitas?
+          </Link>
+        )}
+
+        {selected && (
           <form onSubmit={handleSubmit} className={`${cardBase} mt-6`}>
             <button
               type="button"

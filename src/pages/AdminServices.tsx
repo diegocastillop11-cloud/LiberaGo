@@ -179,6 +179,9 @@ export default function AdminServices() {
             <Link to="/admin/solicitudes" className={btnGhost}>
               Solicitudes
             </Link>
+            <Link to="/admin/sugerencias" className={btnGhost}>
+              Sugerencias
+            </Link>
           </>
         }
       />

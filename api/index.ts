@@ -3,6 +3,7 @@ import "./lib/env.js";
 import { pushRouter } from "./routes/push.js";
 import { webhooksRouter } from "./routes/webhooks.js";
 import { requestsRouter } from "./routes/requests.js";
+import { serviceSuggestionsRouter } from "./routes/serviceSuggestions.js";
 
 const app = express();
 app.use(
@@ -20,5 +21,6 @@ app.get("/api/health", async (_req, res) => {
 app.use("/api/push", pushRouter);
 app.use("/api/webhooks", webhooksRouter);
 app.use("/api/requests", requestsRouter);
+app.use("/api/service-suggestions", serviceSuggestionsRouter);
 
 export default app;

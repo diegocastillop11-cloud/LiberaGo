@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Reveal } from "../components/Reveal";
 import { UserBadge } from "../components/UserBadge";
+import { Logo } from "../components/Logo";
 import { StatusTimeline } from "../components/StatusTimeline";
 import { useAuth } from "../lib/AuthContext";
 import { btnPrimary, btnSecondary, btnGhost, navLink } from "../lib/ui";
@@ -71,12 +72,7 @@ export default function Landing() {
 
       <header className="sticky top-0 z-40 border-b border-line bg-bg/95 backdrop-blur">
         <div className="mx-auto flex max-w-[1180px] items-center justify-between px-6 py-4">
-          <Link
-            to="/"
-            className="font-display text-xl font-semibold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action focus-visible:ring-offset-2 focus-visible:ring-offset-bg rounded-sm"
-          >
-            LiberaGo
-          </Link>
+          <Logo className="h-10" />
           <nav aria-label="Principal" className="hidden items-center gap-8 md:flex">
             <a href="#como-funciona" className={navLink}>
               Cómo funciona
@@ -213,6 +209,12 @@ export default function Landing() {
                 </Reveal>
               ))}
             </div>
+
+            <Reveal delay={servicios.length * 60} className="mt-8">
+              <Link to="/sugerir-servicio" className={btnGhost}>
+                ¿No encuentras el servicio que necesitas?
+              </Link>
+            </Reveal>
           </div>
         </section>
 
@@ -300,9 +302,7 @@ export default function Landing() {
 
       <footer className="border-t border-line">
         <div className="mx-auto flex max-w-[1180px] flex-col gap-3 px-6 py-10 text-sm text-ink-muted sm:flex-row sm:items-center sm:justify-between">
-          <span className="font-display text-base font-semibold text-ink">
-            LiberaGo
-          </span>
+          <Logo className="h-7" />
           <div className="flex items-center gap-4">
             <Link to="/terminos" className="hover:text-ink hover:underline underline-offset-4">
               Términos y Condiciones

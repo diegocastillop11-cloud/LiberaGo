@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/AuthContext";
+import { Logo } from "../components/Logo";
 import type { Profile } from "../lib/types";
 import { btnPrimary, btnSecondary, inputBase } from "../lib/ui";
 
@@ -101,9 +102,7 @@ export default function Login() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-bg px-6">
       <div className="w-full max-w-[400px] rounded-lg border border-line bg-surface p-8">
-        <Link to="/" className="font-display text-xl font-semibold text-ink">
-          LiberaGo
-        </Link>
+        <Logo className="h-9" />
         <h1 className="mt-4 font-display text-2xl font-semibold text-ink">
           {mode === "signin" ? "Inicia sesión" : "Crea tu cuenta"}
         </h1>

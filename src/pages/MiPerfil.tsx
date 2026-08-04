@@ -116,7 +116,7 @@ export default function MiPerfil() {
           />
         </div>
 
-        {profile && profile.worker_status !== "none" && (
+        {profile && profile.worker_status === "approved" && (
           <div className="mt-6">
             <DatosBancarios
               banco={profile.banco}

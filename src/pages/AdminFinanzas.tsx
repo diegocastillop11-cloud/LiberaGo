@@ -1,8 +1,17 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { AppHeader } from "../components/AppHeader";
-import { btnDanger, btnGhost, cardBase } from "../lib/ui";
+import { AdminNav } from "../components/AdminNav";
+import { btnDanger, cardBase } from "../lib/ui";
+
+type WorkerTask = {
+  requestId: string;
+  serviceName: string;
+  price: number;
+  share: number;
+  paid: boolean;
+  completedAt: string;
+};
 
 type WorkerSummary = {
   workerId: string;
@@ -11,6 +20,7 @@ type WorkerSummary = {
   ganadoHistorico: number;
   pagado: number;
   pendiente: number;
+  tasks: WorkerTask[];
 };
 
 type FinanceSummary = {
@@ -89,25 +99,7 @@ export default function AdminFinanzas() {
       <AppHeader
         subtitle="Admin — Finanzas"
         maxWidth={900}
-        actions={
-          <>
-            <Link to="/admin" className={btnGhost}>
-              Servicios
-            </Link>
-            <Link to="/admin/trabajadores" className={btnGhost}>
-              Trabajadores
-            </Link>
-            <Link to="/admin/solicitudes" className={btnGhost}>
-              Solicitudes
-            </Link>
-            <Link to="/admin/usuarios" className={btnGhost}>
-              Usuarios
-            </Link>
-            <Link to="/admin/sugerencias" className={btnGhost}>
-              Sugerencias
-            </Link>
-          </>
-        }
+        actions={<AdminNav current="/admin/finanzas" />}
       />
 
       <main className="mx-auto max-w-[900px] px-6 py-10">
@@ -139,34 +131,67 @@ export default function AdminFinanzas() {
                 <p className="mt-1 font-display text-lg font-semibold text-ink">{money(summary.corteAdmin)}</p>
               </div>
             </div>
+            <p className="mt-3 text-xs text-ink-muted">
+              Solo cuenta un servicio "completado" cuyo pago ya se confirmó (columna <code>paid_at</code>) —
+              uno marcado completado a mano sin haber pasado por un cobro real no suma acá.
+            </p>
 
             <h2 className="mt-10 font-display text-xl font-semibold text-ink">
-              Pago a trabajadores (60% por servicio completado)
+              Pago a trabajadores (60% por servicio completado, pago semanal)
             </h2>
 
             {summary.workers.length === 0 ? (
-              <p className="mt-4 text-sm text-ink-muted">Todavía no hay servicios completados.</p>
+              <p className="mt-4 text-sm text-ink-muted">
+                Todavía no hay servicios completados y pagados que repartir.
+              </p>
             ) : (
               <div className="mt-4 flex flex-col gap-3">
                 {summary.workers.map((w) => (
-                  <div key={w.workerId} className={`${cardBase} flex flex-wrap items-center justify-between gap-4`}>
-                    <div>
-                      <p className="font-semibold text-ink">
-                        {w.name}
-                        {w.deleted && <span className="ml-2 text-xs text-ink-muted">(cuenta eliminada)</span>}
-                      </p>
-                      <p className="mt-0.5 text-xs text-ink-muted">
-                        Ganado: {money(w.ganadoHistorico)} · Pagado: {money(w.pagado)} · Pendiente:{" "}
-                        {money(w.pendiente)}
-                      </p>
+                  <div key={w.workerId} className={cardBase}>
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                      <div>
+                        <p className="font-semibold text-ink">
+                          {w.name}
+                          {w.deleted && <span className="ml-2 text-xs text-ink-muted">(cuenta eliminada)</span>}
+                        </p>
+                        <p className="mt-0.5 text-xs text-ink-muted">
+                          Ganado: {money(w.ganadoHistorico)} · Pagado: {money(w.pagado)} · Pendiente:{" "}
+                          {money(w.pendiente)}
+                        </p>
+                      </div>
+                      <button
+                        className={btnDanger}
+                        onClick={() => marcarPagado(w)}
+                        disabled={w.pendiente <= 0 || payingId === w.workerId}
+                      >
+                        {payingId === w.workerId ? "Registrando…" : "Marcar pagado"}
+                      </button>
                     </div>
-                    <button
-                      className={btnDanger}
-                      onClick={() => marcarPagado(w)}
-                      disabled={w.pendiente <= 0 || payingId === w.workerId}
-                    >
-                      {payingId === w.workerId ? "Registrando…" : "Marcar pagado"}
-                    </button>
+
+                    <div className="mt-4 flex flex-col gap-2 border-t border-line pt-3">
+                      {w.tasks.map((t) => (
+                        <div key={t.requestId} className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                          <span className="text-ink">
+                            {t.serviceName}{" "}
+                            <span className="text-xs text-ink-muted">
+                              — {new Date(t.completedAt).toLocaleDateString("es-CL")}
+                            </span>
+                          </span>
+                          <span className="flex items-center gap-2">
+                            <span className="text-ink-muted">
+                              {money(t.price)} → {money(t.share)}
+                            </span>
+                            <span
+                              className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                                t.paid ? "bg-confirmed/10 text-confirmed-ink" : "bg-action/10 text-action"
+                              }`}
+                            >
+                              {t.paid ? "Pagado" : "Pendiente"}
+                            </span>
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 ))}
               </div>

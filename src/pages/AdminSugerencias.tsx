@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import type { ServiceSuggestion } from "../lib/types";
 import { AppHeader } from "../components/AppHeader";
-import { btnPrimary, btnGhost, btnDanger, cardBase } from "../lib/ui";
+import { AdminNav } from "../components/AdminNav";
+import { btnPrimary, btnDanger, cardBase } from "../lib/ui";
 
 const STATUS_LABELS: Record<ServiceSuggestion["status"], string> = {
   pending: "Pendiente",
@@ -50,25 +50,7 @@ export default function AdminSugerencias() {
       <AppHeader
         subtitle="Admin — Sugerencias"
         maxWidth={900}
-        actions={
-          <>
-            <Link to="/admin" className={btnGhost}>
-              Servicios
-            </Link>
-            <Link to="/admin/trabajadores" className={btnGhost}>
-              Trabajadores
-            </Link>
-            <Link to="/admin/solicitudes" className={btnGhost}>
-              Solicitudes
-            </Link>
-            <Link to="/admin/usuarios" className={btnGhost}>
-              Usuarios
-            </Link>
-            <Link to="/admin/finanzas" className={btnGhost}>
-              Finanzas
-            </Link>
-          </>
-        }
+        actions={<AdminNav current="/admin/sugerencias" />}
       />
 
       <main className="mx-auto max-w-[900px] px-6 py-10">

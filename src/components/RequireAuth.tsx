@@ -26,14 +26,18 @@ export function RequireAuth({
   require?: "worker" | "admin";
 }) {
   const { session, profile, loading, refreshProfile, signOut } = useAuth();
-  const [accountDeleted, setAccountDeleted] = useState(false);
+  const [lockReason, setLockReason] = useState<"deleted" | "blocked" | null>(null);
 
   useEffect(() => {
-    if (profile?.deleted_at && !accountDeleted) {
-      setAccountDeleted(true);
+    if (lockReason) return;
+    if (profile?.deleted_at) {
+      setLockReason("deleted");
+      signOut();
+    } else if (profile?.blocked_at) {
+      setLockReason("blocked");
       signOut();
     }
-  }, [profile?.deleted_at, accountDeleted, signOut]);
+  }, [profile?.deleted_at, profile?.blocked_at, lockReason, signOut]);
 
   if (loading) {
     return (
@@ -43,11 +47,25 @@ export function RequireAuth({
     );
   }
 
-  if (accountDeleted) {
+  if (lockReason === "deleted") {
     return (
       <Screen>
         <p className="font-display text-xl font-semibold text-ink">Cuenta eliminada</p>
         <p className="text-sm text-ink-muted">Esta cuenta fue eliminada y ya no se puede usar.</p>
+        <Link to="/" className={btnPrimary}>
+          Volver al inicio
+        </Link>
+      </Screen>
+    );
+  }
+
+  if (lockReason === "blocked") {
+    return (
+      <Screen>
+        <p className="font-display text-xl font-semibold text-ink">Cuenta bloqueada</p>
+        <p className="text-sm text-ink-muted">
+          Un administrador bloqueó esta cuenta. Si crees que es un error, contáctanos.
+        </p>
         <Link to="/" className={btnPrimary}>
           Volver al inicio
         </Link>

@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import type { Profile, RequestStatus, ServiceRequest } from "../lib/types";
 import { AppHeader } from "../components/AppHeader";
-import { btnDanger, btnGhost, cardBase, inputBase } from "../lib/ui";
+import { AdminNav } from "../components/AdminNav";
+import { btnDanger, cardBase, inputBase } from "../lib/ui";
 
 const STATUS_LABELS: Record<RequestStatus, string> = {
   pendiente_pago: "Pendiente de pago",
@@ -154,25 +154,7 @@ export default function AdminSolicitudes() {
       <AppHeader
         subtitle="Admin — Solicitudes"
         maxWidth={900}
-        actions={
-          <>
-            <Link to="/admin" className={btnGhost}>
-              Servicios
-            </Link>
-            <Link to="/admin/trabajadores" className={btnGhost}>
-              Trabajadores
-            </Link>
-            <Link to="/admin/sugerencias" className={btnGhost}>
-              Sugerencias
-            </Link>
-            <Link to="/admin/usuarios" className={btnGhost}>
-              Usuarios
-            </Link>
-            <Link to="/admin/finanzas" className={btnGhost}>
-              Finanzas
-            </Link>
-          </>
-        }
+        actions={<AdminNav current="/admin/solicitudes" />}
       />
 
       <main className="mx-auto max-w-[900px] px-6 py-10">

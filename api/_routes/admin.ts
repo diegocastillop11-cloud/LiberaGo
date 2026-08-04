@@ -20,18 +20,23 @@ adminRouter.get("/finance-summary", async (req, res) => {
 
   const { data: paidRequests, error } = await supabaseAdmin
     .from("requests")
-    .select("id, price, refund_amount, refunded_at, worker_id, status")
+    .select("id, price, refund_amount, refunded_at, worker_id, status, service_name, updated_at")
     .not("paid_at", "is", null);
   if (error) {
     res.status(500).json({ error: error.message });
     return;
   }
 
-  const { data: payouts } = await supabaseAdmin.from("worker_payouts").select("worker_id, amount");
+  const { data: payouts } = await supabaseAdmin.from("worker_payouts").select("worker_id, amount, request_ids");
+  const coveredIds = new Set((payouts ?? []).flatMap((p) => p.request_ids as string[]));
 
   let revenueBruto = 0;
   let reembolsado = 0;
   const shareByWorker = new Map<string, number>();
+  const tasksByWorker = new Map<
+    string,
+    { requestId: string; serviceName: string; price: number; share: number; paid: boolean; completedAt: string }[]
+  >();
 
   for (const r of paidRequests ?? []) {
     revenueBruto += r.price;
@@ -39,6 +44,17 @@ adminRouter.get("/finance-summary", async (req, res) => {
     if (r.status === "completado" && r.worker_id) {
       const share = Math.round(r.price * WORKER_SHARE);
       shareByWorker.set(r.worker_id, (shareByWorker.get(r.worker_id) ?? 0) + share);
+
+      const tasks = tasksByWorker.get(r.worker_id) ?? [];
+      tasks.push({
+        requestId: r.id,
+        serviceName: r.service_name,
+        price: r.price,
+        share,
+        paid: coveredIds.has(r.id),
+        completedAt: r.updated_at,
+      });
+      tasksByWorker.set(r.worker_id, tasks);
     }
   }
 
@@ -70,6 +86,7 @@ adminRouter.get("/finance-summary", async (req, res) => {
       ganadoHistorico,
       pagado,
       pendiente: ganadoHistorico - pagado,
+      tasks: (tasksByWorker.get(id) ?? []).sort((a, b) => a.completedAt.localeCompare(b.completedAt)),
     };
   });
 

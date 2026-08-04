@@ -1,8 +1,8 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import type { PricingType, Service } from "../lib/types";
 import { AppHeader } from "../components/AppHeader";
+import { AdminNav } from "../components/AdminNav";
 import { btnPrimary, btnGhost, btnDanger, inputBase, cardBase } from "../lib/ui";
 
 const DISTANCE_LABELS = ["Punto de recogida", "Punto de llegada"];
@@ -171,25 +171,7 @@ export default function AdminServices() {
       <AppHeader
         subtitle="Admin — Servicios"
         maxWidth={900}
-        actions={
-          <>
-            <Link to="/admin/trabajadores" className={btnGhost}>
-              Trabajadores
-            </Link>
-            <Link to="/admin/solicitudes" className={btnGhost}>
-              Solicitudes
-            </Link>
-            <Link to="/admin/sugerencias" className={btnGhost}>
-              Sugerencias
-            </Link>
-            <Link to="/admin/usuarios" className={btnGhost}>
-              Usuarios
-            </Link>
-            <Link to="/admin/finanzas" className={btnGhost}>
-              Finanzas
-            </Link>
-          </>
-        }
+        actions={<AdminNav current="/admin" />}
       />
 
       <main className="mx-auto max-w-[900px] px-6 py-10">

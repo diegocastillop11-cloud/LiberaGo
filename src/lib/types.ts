@@ -13,9 +13,20 @@ export type Profile = {
   identity_session_id: string | null;
   identity_verified_at: string | null;
   rut: string | null;
+  apellido: string | null;
+  direccion: string | null;
+  comuna: string | null;
+  ciudad: string | null;
+  region: string | null;
   terms_accepted_at: string | null;
   deleted_at: string | null;
   deletion_reason: string | null;
+  blocked_at: string | null;
+  blocked_reason: string | null;
+  banco: string | null;
+  tipo_cuenta: string | null;
+  numero_cuenta: string | null;
+  titular_cuenta: string | null;
   created_at: string;
 };
 

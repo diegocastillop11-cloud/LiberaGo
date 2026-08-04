@@ -104,8 +104,29 @@ export default function MiPerfil() {
         </div>
 
         <div className="mt-6">
-          <DatosPersonales fullName={profile?.full_name ?? null} rut={profile?.rut ?? null} onSaved={refreshProfile} />
+          <DatosPersonales
+            fullName={profile?.full_name ?? null}
+            rut={profile?.rut ?? null}
+            apellido={profile?.apellido ?? null}
+            direccion={profile?.direccion ?? null}
+            comuna={profile?.comuna ?? null}
+            ciudad={profile?.ciudad ?? null}
+            region={profile?.region ?? null}
+            onSaved={refreshProfile}
+          />
         </div>
+
+        {profile && profile.worker_status !== "none" && (
+          <div className="mt-6">
+            <DatosBancarios
+              banco={profile.banco}
+              tipoCuenta={profile.tipo_cuenta}
+              numeroCuenta={profile.numero_cuenta}
+              titularCuenta={profile.titular_cuenta}
+              onSaved={refreshProfile}
+            />
+          </div>
+        )}
 
         <div className="mt-6">
           <EliminarCuenta />
@@ -118,29 +139,68 @@ export default function MiPerfil() {
 function DatosPersonales({
   fullName,
   rut,
+  apellido,
+  direccion,
+  comuna,
+  ciudad,
+  region,
   onSaved,
 }: {
   fullName: string | null;
   rut: string | null;
+  apellido: string | null;
+  direccion: string | null;
+  comuna: string | null;
+  ciudad: string | null;
+  region: string | null;
   onSaved: () => Promise<void>;
 }) {
   const [name, setName] = useState(fullName ?? "");
+  const [apellidoValue, setApellido] = useState(apellido ?? "");
+  const [direccionValue, setDireccion] = useState(direccion ?? "");
+  const [comunaValue, setComuna] = useState(comuna ?? "");
+  const [ciudadValue, setCiudad] = useState(ciudad ?? "");
+  const [regionValue, setRegion] = useState(region ?? "");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   const nameChanged = name.trim() !== (fullName ?? "");
+  const extraChanged =
+    apellidoValue.trim() !== (apellido ?? "") ||
+    direccionValue.trim() !== (direccion ?? "") ||
+    comunaValue.trim() !== (comuna ?? "") ||
+    ciudadValue.trim() !== (ciudad ?? "") ||
+    regionValue.trim() !== (region ?? "");
 
   async function save() {
     setError(null);
     setSaving(true);
 
-    const { error: err } = await supabase.rpc("set_own_full_name", { new_name: name.trim() });
-    setSaving(false);
-    if (err) {
-      setError(err.message);
-      return;
+    if (nameChanged) {
+      const { error: err } = await supabase.rpc("set_own_full_name", { new_name: name.trim() });
+      if (err) {
+        setError(err.message);
+        setSaving(false);
+        return;
+      }
     }
 
+    if (extraChanged) {
+      const { error: err } = await supabase.rpc("set_own_extra_info", {
+        new_apellido: apellidoValue,
+        new_direccion: direccionValue,
+        new_comuna: comunaValue,
+        new_ciudad: ciudadValue,
+        new_region: regionValue,
+      });
+      if (err) {
+        setError(err.message);
+        setSaving(false);
+        return;
+      }
+    }
+
+    setSaving(false);
     await onSaved();
   }
 
@@ -173,14 +233,195 @@ function DatosPersonales({
             El RUT no se puede modificar una vez registrado.
           </p>
         </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="miPerfilApellido" className="text-sm font-medium text-ink-muted">
+            Apellido (opcional)
+          </label>
+          <input
+            id="miPerfilApellido"
+            type="text"
+            className={inputBase}
+            value={apellidoValue}
+            onChange={(e) => setApellido(e.target.value)}
+          />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="miPerfilDireccion" className="text-sm font-medium text-ink-muted">
+            Dirección (opcional)
+          </label>
+          <input
+            id="miPerfilDireccion"
+            type="text"
+            className={inputBase}
+            value={direccionValue}
+            onChange={(e) => setDireccion(e.target.value)}
+          />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="miPerfilComuna" className="text-sm font-medium text-ink-muted">
+            Comuna (opcional)
+          </label>
+          <input
+            id="miPerfilComuna"
+            type="text"
+            className={inputBase}
+            value={comunaValue}
+            onChange={(e) => setComuna(e.target.value)}
+          />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="miPerfilCiudad" className="text-sm font-medium text-ink-muted">
+            Ciudad (opcional)
+          </label>
+          <input
+            id="miPerfilCiudad"
+            type="text"
+            className={inputBase}
+            value={ciudadValue}
+            onChange={(e) => setCiudad(e.target.value)}
+          />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="miPerfilRegion" className="text-sm font-medium text-ink-muted">
+            Región (opcional)
+          </label>
+          <input
+            id="miPerfilRegion"
+            type="text"
+            className={inputBase}
+            value={regionValue}
+            onChange={(e) => setRegion(e.target.value)}
+          />
+        </div>
       </div>
 
       <button
         type="button"
         className={`${btnPrimary} mt-4`}
         onClick={save}
-        disabled={!nameChanged || name.trim().length === 0 || saving}
+        disabled={(!nameChanged && !extraChanged) || (nameChanged && name.trim().length === 0) || saving}
       >
+        {saving ? "Guardando…" : "Guardar cambios"}
+      </button>
+    </div>
+  );
+}
+
+function DatosBancarios({
+  banco,
+  tipoCuenta,
+  numeroCuenta,
+  titularCuenta,
+  onSaved,
+}: {
+  banco: string | null;
+  tipoCuenta: string | null;
+  numeroCuenta: string | null;
+  titularCuenta: string | null;
+  onSaved: () => Promise<void>;
+}) {
+  const [bancoValue, setBanco] = useState(banco ?? "");
+  const [tipoCuentaValue, setTipoCuenta] = useState(tipoCuenta ?? "");
+  const [numeroCuentaValue, setNumeroCuenta] = useState(numeroCuenta ?? "");
+  const [titularCuentaValue, setTitularCuenta] = useState(titularCuenta ?? "");
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const changed =
+    bancoValue.trim() !== (banco ?? "") ||
+    tipoCuentaValue.trim() !== (tipoCuenta ?? "") ||
+    numeroCuentaValue.trim() !== (numeroCuenta ?? "") ||
+    titularCuentaValue.trim() !== (titularCuenta ?? "");
+
+  async function save() {
+    setError(null);
+    setSaving(true);
+
+    const { error: err } = await supabase.rpc("set_own_bank_info", {
+      new_banco: bancoValue,
+      new_tipo_cuenta: tipoCuentaValue,
+      new_numero_cuenta: numeroCuentaValue,
+      new_titular_cuenta: titularCuentaValue,
+    });
+
+    setSaving(false);
+    if (err) {
+      setError(err.message);
+      return;
+    }
+    await onSaved();
+  }
+
+  return (
+    <div className={cardBase}>
+      <p className="font-display text-xl font-semibold text-ink">Datos bancarios</p>
+      <p className="mt-1 text-sm text-ink-muted">Para transferirte tu pago semanal.</p>
+
+      {error && (
+        <div className="mt-4 rounded-sm border border-error bg-error/10 px-4 py-3 text-sm text-error">{error}</div>
+      )}
+
+      <div className="mt-4 flex flex-col gap-3">
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="miPerfilBanco" className="text-sm font-medium text-ink-muted">
+            Banco
+          </label>
+          <input
+            id="miPerfilBanco"
+            type="text"
+            className={inputBase}
+            value={bancoValue}
+            onChange={(e) => setBanco(e.target.value)}
+          />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="miPerfilTipoCuenta" className="text-sm font-medium text-ink-muted">
+            Tipo de cuenta
+          </label>
+          <input
+            id="miPerfilTipoCuenta"
+            type="text"
+            className={inputBase}
+            value={tipoCuentaValue}
+            onChange={(e) => setTipoCuenta(e.target.value)}
+            placeholder="Corriente, vista, ahorro…"
+          />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="miPerfilNumeroCuenta" className="text-sm font-medium text-ink-muted">
+            Número de cuenta
+          </label>
+          <input
+            id="miPerfilNumeroCuenta"
+            type="text"
+            className={inputBase}
+            value={numeroCuentaValue}
+            onChange={(e) => setNumeroCuenta(e.target.value)}
+          />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="miPerfilTitularCuenta" className="text-sm font-medium text-ink-muted">
+            Nombre del titular
+          </label>
+          <input
+            id="miPerfilTitularCuenta"
+            type="text"
+            className={inputBase}
+            value={titularCuentaValue}
+            onChange={(e) => setTitularCuenta(e.target.value)}
+          />
+        </div>
+      </div>
+
+      <button type="button" className={`${btnPrimary} mt-4`} onClick={save} disabled={!changed || saving}>
         {saving ? "Guardando…" : "Guardar cambios"}
       </button>
     </div>

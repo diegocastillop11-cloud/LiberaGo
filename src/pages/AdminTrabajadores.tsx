@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import type { IdentityStatus, Profile, WorkerStatus } from "../lib/types";
-import { AppHeader } from "../components/AppHeader";
-import { AdminNav } from "../components/AdminNav";
+import { AdminLayout } from "../components/AdminLayout";
 import { btnPrimary, btnDanger, cardBase } from "../lib/ui";
 
 const STATUS_LABELS: Record<WorkerStatus, string> = {
@@ -55,13 +54,7 @@ export default function AdminTrabajadores() {
   const decided = profiles.filter((p) => p.worker_status !== "pending");
 
   return (
-    <div className="min-h-screen bg-bg">
-      <AppHeader
-        subtitle="Admin — Trabajadores"
-        maxWidth={900}
-        actions={<AdminNav current="/admin/trabajadores" />}
-      />
-
+    <AdminLayout subtitle="Admin — Trabajadores">
       <main className="mx-auto max-w-[900px] px-6 py-10">
         {error && (
           <div className="mb-6 rounded-sm border border-error bg-error/10 px-4 py-3 text-sm text-error">
@@ -139,6 +132,6 @@ export default function AdminTrabajadores() {
           </>
         )}
       </main>
-    </div>
+    </AdminLayout>
   );
 }

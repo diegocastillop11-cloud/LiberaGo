@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabase";
 import type { Profile, RequestStatus, ServiceRequest } from "../lib/types";
-import { AppHeader } from "../components/AppHeader";
-import { AdminNav } from "../components/AdminNav";
+import { AdminLayout } from "../components/AdminLayout";
 import { btnDanger, cardBase, inputBase } from "../lib/ui";
 
 const STATUS_LABELS: Record<RequestStatus, string> = {
@@ -150,12 +149,7 @@ export default function AdminSolicitudes() {
   const filtered = filter === "todas" ? requests : requests.filter((r) => r.status === filter);
 
   return (
-    <div className="min-h-screen bg-bg">
-      <AppHeader
-        subtitle="Admin — Solicitudes"
-        maxWidth={900}
-        actions={<AdminNav current="/admin/solicitudes" />}
-      />
+    <AdminLayout subtitle="Admin — Solicitudes">
 
       <main className="mx-auto max-w-[900px] px-6 py-10">
         {error && (
@@ -315,6 +309,6 @@ export default function AdminSolicitudes() {
           </div>
         )}
       </main>
-    </div>
+    </AdminLayout>
   );
 }

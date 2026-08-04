@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
-import { AppHeader } from "../components/AppHeader";
-import { AdminNav } from "../components/AdminNav";
+import { AdminLayout } from "../components/AdminLayout";
 import { btnDanger, cardBase } from "../lib/ui";
 
 type WorkerTask = {
@@ -95,12 +94,7 @@ export default function AdminFinanzas() {
   }
 
   return (
-    <div className="min-h-screen bg-bg">
-      <AppHeader
-        subtitle="Admin — Finanzas"
-        maxWidth={900}
-        actions={<AdminNav current="/admin/finanzas" />}
-      />
+    <AdminLayout subtitle="Admin — Finanzas">
 
       <main className="mx-auto max-w-[900px] px-6 py-10">
         {error && (
@@ -199,6 +193,6 @@ export default function AdminFinanzas() {
           </>
         ) : null}
       </main>
-    </div>
+    </AdminLayout>
   );
 }

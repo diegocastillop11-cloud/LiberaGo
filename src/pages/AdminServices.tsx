@@ -1,8 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { supabase } from "../lib/supabase";
 import type { PricingType, Service } from "../lib/types";
-import { AppHeader } from "../components/AppHeader";
-import { AdminNav } from "../components/AdminNav";
+import { AdminLayout } from "../components/AdminLayout";
 import { btnPrimary, btnGhost, btnDanger, inputBase, cardBase } from "../lib/ui";
 
 const DISTANCE_LABELS = ["Punto de recogida", "Punto de llegada"];
@@ -167,13 +166,7 @@ export default function AdminServices() {
   }
 
   return (
-    <div className="min-h-screen bg-bg">
-      <AppHeader
-        subtitle="Admin — Servicios"
-        maxWidth={900}
-        actions={<AdminNav current="/admin" />}
-      />
-
+    <AdminLayout subtitle="Admin — Servicios">
       <main className="mx-auto max-w-[900px] px-6 py-10">
         {error && (
           <div className="mb-6 rounded-sm border border-error bg-error/10 px-4 py-3 text-sm text-error">
@@ -424,6 +417,6 @@ export default function AdminServices() {
           </div>
         )}
       </main>
-    </div>
+    </AdminLayout>
   );
 }

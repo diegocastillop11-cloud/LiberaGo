@@ -2,8 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../lib/AuthContext";
 import type { Profile, WorkerStatus } from "../lib/types";
-import { AppHeader } from "../components/AppHeader";
-import { AdminNav } from "../components/AdminNav";
+import { AdminLayout } from "../components/AdminLayout";
 import { btnDanger, btnGhost, cardBase } from "../lib/ui";
 
 const STATUS_LABELS: Record<WorkerStatus, string> = {
@@ -84,12 +83,7 @@ export default function AdminUsuarios() {
   }
 
   return (
-    <div className="min-h-screen bg-bg">
-      <AppHeader
-        subtitle="Admin — Usuarios"
-        maxWidth={900}
-        actions={<AdminNav current="/admin/usuarios" />}
-      />
+    <AdminLayout subtitle="Admin — Usuarios">
 
       <main className="mx-auto max-w-[900px] px-6 py-10">
         {error && (
@@ -175,6 +169,6 @@ export default function AdminUsuarios() {
           </div>
         )}
       </main>
-    </div>
+    </AdminLayout>
   );
 }

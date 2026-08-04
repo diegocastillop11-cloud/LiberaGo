@@ -2,11 +2,11 @@
 -- de nombre/RUT/T&C del onboarding): apellido y datos de dirección, para
 -- que el usuario los rellene si quiere desde /perfil.
 
-alter table profiles add column apellido text;
-alter table profiles add column direccion text;
-alter table profiles add column comuna text;
-alter table profiles add column ciudad text;
-alter table profiles add column region text;
+alter table profiles add column if not exists apellido text;
+alter table profiles add column if not exists direccion text;
+alter table profiles add column if not exists comuna text;
+alter table profiles add column if not exists ciudad text;
+alter table profiles add column if not exists region text;
 
 create or replace function public.set_own_extra_info(
   new_apellido text,

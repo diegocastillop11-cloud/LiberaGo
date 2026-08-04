@@ -24,6 +24,30 @@ type AuthValue = {
 const AuthContext = createContext<AuthValue | null>(null);
 
 const SIGNUP_INTENT_KEY = "liberago_signup_intent";
+const SIGNUP_INTENT_MAX_AGE_MS = 10 * 60 * 1000;
+
+// El intent se guarda como JSON con timestamp (no un string plano) porque
+// si el usuario abandona el flujo de Google OAuth (cierra el popup, elige
+// otra cuenta, etc.) el localStorage queda con el flag pegado — sin la
+// expiración, el próximo login normal de CUALQUIER cuenta en ese mismo
+// navegador heredaba la postulación a trabajador sin haberlo pedido (bug
+// reportado en producción: una cuenta que nunca postuló apareció con
+// worker_status pending).
+function readSignupIntent(): "trabajador" | null {
+  const raw = window.localStorage.getItem(SIGNUP_INTENT_KEY);
+  window.localStorage.removeItem(SIGNUP_INTENT_KEY);
+  if (!raw) return null;
+
+  try {
+    const parsed = JSON.parse(raw) as { type: "trabajador"; ts: number };
+    if (parsed.type === "trabajador" && Date.now() - parsed.ts < SIGNUP_INTENT_MAX_AGE_MS) {
+      return "trabajador";
+    }
+  } catch {
+    // formato viejo (string plano) o corrupto — se descarta.
+  }
+  return null;
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
@@ -37,16 +61,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Si eligió "registrarme como trabajador", esto aplica esa postulación
     // apenas exista sesión real — cubre email/password y Google por igual,
     // sin depender de metadata que el proveedor OAuth no siempre deja pasar.
-    const intent = window.localStorage.getItem(SIGNUP_INTENT_KEY);
+    const intent = readSignupIntent();
     if (intent === "trabajador" && current?.worker_status === "none") {
-      window.localStorage.removeItem(SIGNUP_INTENT_KEY);
       const { error } = await supabase.rpc("request_worker_status");
       if (!error) {
         const refreshed = await supabase.from("profiles").select("*").eq("id", userId).single();
         current = (refreshed.data as Profile) ?? current;
       }
-    } else if (intent) {
-      window.localStorage.removeItem(SIGNUP_INTENT_KEY);
     }
 
     setProfile(current);

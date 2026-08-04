@@ -8,6 +8,10 @@ import { btnPrimary, btnSecondary, btnGhost, inputBase } from "../lib/ui";
 const MIN_PASSWORD_LENGTH = 8;
 const SIGNUP_INTENT_KEY = "liberago_signup_intent";
 
+function setSignupIntent() {
+  window.localStorage.setItem(SIGNUP_INTENT_KEY, JSON.stringify({ type: "trabajador", ts: Date.now() }));
+}
+
 function friendlyError(message: string): string {
   if (message.includes("Invalid login credentials")) return "Correo o contraseña incorrectos.";
   if (message.includes("User already registered")) return "Ya existe una cuenta con ese correo.";
@@ -59,8 +63,13 @@ export default function Login() {
       }
     }
 
-    if (signupAs === "trabajador") {
-      window.localStorage.setItem(SIGNUP_INTENT_KEY, "trabajador");
+    if (mode === "signup" && signupAs === "trabajador") {
+      setSignupIntent();
+    } else {
+      // Un login normal nunca debe heredar un intent de "trabajador" que
+      // haya quedado pegado de un intento de registro anterior abandonado
+      // (ver AuthContext.tsx).
+      window.localStorage.removeItem(SIGNUP_INTENT_KEY);
     }
 
     setSubmitting(true);
@@ -94,7 +103,9 @@ export default function Login() {
 
   function handleGoogleClick() {
     if (mode === "signup" && signupAs === "trabajador") {
-      window.localStorage.setItem(SIGNUP_INTENT_KEY, "trabajador");
+      setSignupIntent();
+    } else {
+      window.localStorage.removeItem(SIGNUP_INTENT_KEY);
     }
     setError(null);
     signInWithGoogle();

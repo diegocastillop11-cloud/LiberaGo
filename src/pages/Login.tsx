@@ -1,7 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/AuthContext";
-import { supabase } from "../lib/supabase";
 import { Logo } from "../components/Logo";
 import type { Profile } from "../lib/types";
 import { btnPrimary, btnSecondary, btnGhost, inputBase } from "../lib/ui";
@@ -31,7 +30,6 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -41,7 +39,6 @@ export default function Login() {
     setError(null);
     setInfo(null);
     setConfirmPassword("");
-    setAcceptedTerms(false);
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -52,10 +49,6 @@ export default function Login() {
     const cleanEmail = email.trim().toLowerCase();
 
     if (mode === "signup") {
-      if (!acceptedTerms) {
-        setError("Debes aceptar los Términos y Condiciones para crear tu cuenta.");
-        return;
-      }
       if (password.length < MIN_PASSWORD_LENGTH) {
         setError(`La contraseña debe tener al menos ${MIN_PASSWORD_LENGTH} caracteres.`);
         return;
@@ -82,12 +75,6 @@ export default function Login() {
       return;
     }
     if (mode === "signup") {
-      // Si Supabase no exige confirmar el correo, ya hay sesión activa acá y
-      // esto evita mostrarle a este usuario la pantalla de aceptación de
-      // T&C de nuevo — ya la aceptó con el checkbox de arriba. Si exige
-      // confirmación, no hay sesión todavía y el RPC no hace nada (lo
-      // atrapa el gate en RequireAuth cuando confirme e ingrese).
-      await supabase.rpc("accept_terms");
       setInfo(
         signupAs === "trabajador"
           ? "Cuenta creada. Tu postulación como trabajador quedó pendiente de aprobación."
@@ -106,14 +93,8 @@ export default function Login() {
   }, [mode, loading, session, profile, navigate]);
 
   function handleGoogleClick() {
-    if (mode === "signup") {
-      if (!acceptedTerms) {
-        setError("Debes aceptar los Términos y Condiciones para crear tu cuenta.");
-        return;
-      }
-      if (signupAs === "trabajador") {
-        window.localStorage.setItem(SIGNUP_INTENT_KEY, "trabajador");
-      }
+    if (mode === "signup" && signupAs === "trabajador") {
+      window.localStorage.setItem(SIGNUP_INTENT_KEY, "trabajador");
     }
     setError(null);
     signInWithGoogle();
@@ -189,32 +170,10 @@ export default function Login() {
                 Tu postulación queda pendiente hasta que un admin la apruebe.
               </p>
             )}
-
-            <label className="mt-4 flex items-start gap-2 text-sm text-ink-muted">
-              <input
-                type="checkbox"
-                checked={acceptedTerms}
-                onChange={(e) => setAcceptedTerms(e.target.checked)}
-                className="mt-0.5 h-4 w-4 flex-shrink-0 rounded-sm border-line accent-action"
-              />
-              <span>
-                Acepto los{" "}
-                <Link to="/terminos" target="_blank" className="text-action underline-offset-4 hover:underline">
-                  Términos y Condiciones
-                </Link>
-                , incluyendo la verificación de identidad y el tratamiento de mis datos personales
-                que ahí se describe.
-              </span>
-            </label>
           </div>
         )}
 
-        <button
-          type="button"
-          className={`${btnSecondary} mt-5 w-full`}
-          onClick={handleGoogleClick}
-          disabled={mode === "signup" && !acceptedTerms}
-        >
+        <button type="button" className={`${btnSecondary} mt-5 w-full`} onClick={handleGoogleClick}>
           Continuar con Google
         </button>
 
@@ -298,11 +257,7 @@ export default function Login() {
             </div>
           )}
 
-          <button
-            type="submit"
-            className={btnPrimary}
-            disabled={submitting || (mode === "signup" && !acceptedTerms)}
-          >
+          <button type="submit" className={btnPrimary} disabled={submitting}>
             {submitting ? "Un momento…" : mode === "signin" ? "Ingresar" : "Crear cuenta"}
           </button>
         </form>

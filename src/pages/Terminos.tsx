@@ -13,9 +13,8 @@ const secciones = [
   {
     title: "2. Cuentas y verificación",
     body: [
-      "Para usar LiberaGo necesitas iniciar sesión con una cuenta válida, sea con correo y contraseña o con Google. Sin importar el método que uses para entrar, la primera vez que accedes te pedimos aceptar explícitamente estos Términos y Condiciones — no se asume tu aceptación por el solo hecho de crear la cuenta.",
+      "Para usar LiberaGo necesitas iniciar sesión con una cuenta válida, sea con correo y contraseña o con Google. Sin importar el método que uses para entrar, la primera vez que accedes te pedimos completar tu nombre y tu RUT, y aceptar explícitamente estos Términos y Condiciones — no se asume tu aceptación por el solo hecho de crear la cuenta, ni se te deja usar la plataforma sin esos datos básicos.",
       "Para ofrecer servicios como Trabajador, además debes postular dentro de la app, verificar tu identidad con documento y selfie, subir una foto de perfil y ser aprobado por un administrador — los tres requisitos son obligatorios, no basta con uno solo.",
-      "Para pedir un segundo trámite en adelante como Cliente, debes ingresar tu RUT (ver sección 3).",
     ],
   },
   {
@@ -23,14 +22,14 @@ const secciones = [
     body: [
       "El nivel de verificación es distinto para Cliente y Trabajador, porque el riesgo es distinto: un Trabajador entra a espacios del Cliente o recibe pagos en persona, mientras que el pago del Cliente ya queda cubierto por adelantado a través de MercadoPago antes de que cualquier Trabajador vea la solicitud.",
       "Trabajador: exigimos verificación completa — documento de identidad, selfie y comparación biométrica — antes de que un administrador pueda aprobar la postulación. Esta verificación la realiza un proveedor externo especializado (Didit), no LiberaGo directamente. LiberaGo no almacena el documento de identidad ni el RUN del Trabajador — solo guarda si la verificación quedó aprobada o no, y una referencia interna a la sesión de verificación, nunca el documento ni la foto en sí. La verificación requiere ser mayor de 18 años.",
-      "Cliente: la primera solicitud no requiere ningún dato adicional. Desde la segunda solicitud en adelante, pedimos el RUT — es un dato que tú mismo ingresas (no verificamos el documento físico), pensado para poder identificarte ante un eventual reclamo o disputa, no como prueba biométrica de identidad.",
+      "Cliente: pedimos tu RUT apenas creas la cuenta — es un dato que tú mismo ingresas (no verificamos el documento físico), pensado para poder identificarte ante un eventual reclamo o disputa, no como prueba biométrica de identidad.",
       "Si una verificación (de Trabajador) es rechazada, puedes volver a intentarlo.",
     ],
   },
   {
     title: "4. Protección de datos personales",
     body: [
-      "Los datos que LiberaGo guarda sobre ti son: tu correo, nombre, teléfono de contacto (si lo entregas al crear una solicitud), tu foto de perfil, tu RUT (si eres Cliente y ya hiciste más de una solicitud), el resultado de tu verificación de identidad (si eres Trabajador), y el historial de tus solicitudes.",
+      "Los datos que LiberaGo guarda sobre ti son: tu correo, nombre, RUT, teléfono de contacto (si lo entregas al crear una solicitud), tu foto de perfil, el resultado de tu verificación de identidad (si eres Trabajador), y el historial de tus solicitudes.",
       "Estos datos se usan únicamente para operar la plataforma — conectar Clientes con Trabajadores, procesar pagos y confirmar identidad — y no se venden ni se comparten con terceros salvo los proveedores necesarios para operar (MercadoPago para pagos, Didit para verificación de identidad de Trabajadores).",
       "Tu foto de perfil es visible para la otra parte de una solicitud (el Cliente ve la foto del Trabajador asignado y viceversa) — es información pensada para generar confianza, no es privada dentro de ese contexto.",
       "Puedes pedir la eliminación de tu cuenta y tus datos contactando a LiberaGo, salvo la información que la ley obligue a conservar (por ejemplo, registros de pagos).",

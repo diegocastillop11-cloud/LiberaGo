@@ -2,8 +2,10 @@ import { useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../lib/AuthContext";
 import { supabase } from "../lib/supabase";
+import { isValidRut, formatRut } from "../lib/rut";
+import type { Profile } from "../lib/types";
 import { AppHeader } from "./AppHeader";
-import { btnPrimary } from "../lib/ui";
+import { btnPrimary, inputBase } from "../lib/ui";
 
 function Screen({ children }: { children: ReactNode }) {
   return (
@@ -45,13 +47,16 @@ export function RequireAuth({
     );
   }
 
-  // Fuente de verdad real de la aceptación de T&C — no el checkbox del
-  // formulario de registro por sí solo, porque Google OAuth no distingue
-  // "registrarme" de "ingresar" (ver 0018_terms_acceptance.sql).
-  if (profile && !profile.terms_accepted_at) {
+  // Nombre, RUT y aceptación de T&C se piden apenas hay sesión, sin importar
+  // el método de login — "cliente" no es un rol exclusivo (CLAUDE.md), así
+  // que no hay una cuenta que se libre de estos datos. El checkbox del
+  // formulario de registro (Login.tsx) no alcanza por sí solo porque Google
+  // OAuth no distingue "registrarme" de "ingresar" (ver
+  // 0018_terms_acceptance.sql / 0020_full_name_rpc.sql).
+  if (profile && (!profile.terms_accepted_at || !profile.full_name || !profile.rut)) {
     return (
       <Screen>
-        <TermsGate onAccepted={refreshProfile} />
+        <OnboardingGate profile={profile} onDone={refreshProfile} />
       </Screen>
     );
   }
@@ -81,39 +86,130 @@ export function RequireAuth({
   return <>{children}</>;
 }
 
-function TermsGate({ onAccepted }: { onAccepted: () => void }) {
+function OnboardingGate({ profile, onDone }: { profile: Profile; onDone: () => void }) {
+  const needsName = !profile.full_name;
+  const needsRut = !profile.rut;
+  const needsTerms = !profile.terms_accepted_at;
+
+  const [name, setName] = useState("");
+  const [rut, setRut] = useState("");
   const [checked, setChecked] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  async function accept() {
+  const canSubmit =
+    (!needsName || name.trim().length > 0) &&
+    (!needsRut || isValidRut(rut)) &&
+    (!needsTerms || checked);
+
+  async function submit() {
+    setError(null);
+    if (needsRut && !isValidRut(rut)) {
+      setError("Ese RUT no parece válido. Revísalo e intenta de nuevo.");
+      return;
+    }
+
     setSubmitting(true);
-    const { error } = await supabase.rpc("accept_terms");
+
+    if (needsName) {
+      const { error: err } = await supabase.rpc("set_own_full_name", { new_name: name.trim() });
+      if (err) {
+        setError(err.message);
+        setSubmitting(false);
+        return;
+      }
+    }
+
+    if (needsRut) {
+      const { error: err } = await supabase.rpc("set_own_rut", { new_rut: formatRut(rut) });
+      if (err) {
+        setError(err.message);
+        setSubmitting(false);
+        return;
+      }
+    }
+
+    if (needsTerms) {
+      const { error: err } = await supabase.rpc("accept_terms");
+      if (err) {
+        setError(err.message);
+        setSubmitting(false);
+        return;
+      }
+    }
+
     setSubmitting(false);
-    if (!error) onAccepted();
+    onDone();
   }
 
   return (
     <>
-      <p className="font-display text-xl font-semibold text-ink">Acepta los Términos y Condiciones</p>
+      <p className="font-display text-xl font-semibold text-ink">Antes de seguir</p>
       <p className="text-sm text-ink-muted">
-        Antes de seguir usando LiberaGo necesitamos que aceptes los{" "}
-        <Link to="/terminos" target="_blank" className="text-action underline-offset-4 hover:underline">
-          Términos y Condiciones
-        </Link>
-        , incluyendo la verificación de identidad y el tratamiento de tus datos personales que ahí
-        se describe.
+        Necesitamos algunos datos básicos para que puedas usar LiberaGo.
       </p>
-      <label className="flex items-start gap-2 text-left text-sm text-ink-muted">
-        <input
-          type="checkbox"
-          checked={checked}
-          onChange={(e) => setChecked(e.target.checked)}
-          className="mt-0.5 h-4 w-4 flex-shrink-0 rounded-sm border-line accent-action"
-        />
-        <span>He leído y acepto los Términos y Condiciones.</span>
-      </label>
-      <button className={btnPrimary} onClick={accept} disabled={!checked || submitting}>
-        {submitting ? "Un momento…" : "Continuar"}
+
+      {error && (
+        <div className="w-full rounded-sm border border-error bg-error/10 px-4 py-3 text-sm text-error">
+          {error}
+        </div>
+      )}
+
+      <div className="flex w-full flex-col gap-3 text-left">
+        {needsName && (
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="onboardingName" className="text-sm font-medium text-ink-muted">
+              Nombre completo
+            </label>
+            <input
+              id="onboardingName"
+              type="text"
+              className={inputBase}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </div>
+        )}
+
+        {needsRut && (
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="onboardingRut" className="text-sm font-medium text-ink-muted">
+              RUT
+            </label>
+            <input
+              id="onboardingRut"
+              type="text"
+              className={inputBase}
+              value={rut}
+              onChange={(e) => setRut(e.target.value)}
+              placeholder="12.345.678-9"
+              required
+            />
+          </div>
+        )}
+
+        {needsTerms && (
+          <label className="flex items-start gap-2 text-sm text-ink-muted">
+            <input
+              type="checkbox"
+              checked={checked}
+              onChange={(e) => setChecked(e.target.checked)}
+              className="mt-0.5 h-4 w-4 flex-shrink-0 rounded-sm border-line accent-action"
+            />
+            <span>
+              He leído y acepto los{" "}
+              <Link to="/terminos" target="_blank" className="text-action underline-offset-4 hover:underline">
+                Términos y Condiciones
+              </Link>
+              .
+            </span>
+          </label>
+        )}
+      </div>
+
+      <button className={btnPrimary} onClick={submit} disabled={!canSubmit || submitting}>
+        {submitting ? "Guardando…" : "Continuar"}
       </button>
     </>
   );

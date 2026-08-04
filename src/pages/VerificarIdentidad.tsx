@@ -30,6 +30,21 @@ export default function VerificarIdentidad() {
     return () => clearInterval(interval);
   }, [justReturned, profile?.identity_status, refreshProfile]);
 
+  // Si el trabajador vuelve atrás con el navegador justo después de tocar
+  // "Verificar mi identidad" (window.location.href a Didit), Chrome puede
+  // restaurar esta página desde bfcache en el mismo estado congelado en el
+  // que quedó — botón deshabilitado mostrando "Redirigiendo…" para siempre,
+  // sin que React vuelva a montar el componente. pageshow con
+  // event.persisted=true es la señal de que la página vino de bfcache, no
+  // de una carga nueva.
+  useEffect(() => {
+    function handlePageShow(e: PageTransitionEvent) {
+      if (e.persisted) setStarting(false);
+    }
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, []);
+
   async function start() {
     setStarting(true);
     setError(null);

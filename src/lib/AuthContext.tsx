@@ -71,10 +71,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     // Si esta cuenta postuló a trabajador sin sesión (formulario público
-    // /trabaja-con-nosotros, ver 0028_worker_leads.sql), esto la activa
+    // /trabaja-con-nosotros, ver 0028/0029_worker_leads.sql), esto la activa
     // apenas el correo real de la sesión coincide con esa postulación —
-    // seguro de re-ejecutar en cada login, es un no-op si no hay match.
-    if (current?.worker_status === "none") {
+    // seguro de re-ejecutar en cada login, es un no-op si no hay match. El
+    // RPC decide la condición final (none o rejected); acá solo se evita la
+    // llamada de más cuando ya está pending/approved.
+    if (current?.worker_status === "none" || current?.worker_status === "rejected") {
       const { error } = await supabase.rpc("claim_worker_lead");
       if (!error) {
         const refreshed = await supabase.from("profiles").select("*").eq("id", userId).single();

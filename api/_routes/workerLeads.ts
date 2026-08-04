@@ -14,7 +14,14 @@ const MAX_LONG = 2000;
 workerLeadsRouter.post("/", async (req, res) => {
   const { fullName, email, phone, message } = req.body ?? {};
 
-  if (typeof fullName !== "string" || !fullName.trim() || typeof email !== "string" || !email.trim()) {
+  if (
+    typeof fullName !== "string" ||
+    !fullName.trim() ||
+    typeof email !== "string" ||
+    !email.trim() ||
+    typeof phone !== "string" ||
+    !phone.trim()
+  ) {
     res.status(400).json({ error: "Faltan campos obligatorios." });
     return;
   }
@@ -22,7 +29,7 @@ workerLeadsRouter.post("/", async (req, res) => {
   if (
     fullName.length > MAX_SHORT ||
     email.length > MAX_SHORT ||
-    (typeof phone === "string" && phone.length > MAX_SHORT) ||
+    phone.length > MAX_SHORT ||
     (typeof message === "string" && message.length > MAX_LONG)
   ) {
     res.status(400).json({ error: "Alguno de los campos es demasiado largo." });

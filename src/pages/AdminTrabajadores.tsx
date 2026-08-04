@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
-import type { IdentityStatus, Profile, WorkerStatus } from "../lib/types";
+import type { IdentityStatus, Profile, WorkerLead, WorkerStatus } from "../lib/types";
 import { AdminLayout } from "../components/AdminLayout";
 import { btnPrimary, btnGhost, btnDanger, cardBase } from "../lib/ui";
 
@@ -20,17 +20,22 @@ const IDENTITY_LABELS: Record<IdentityStatus, string> = {
 
 export default function AdminTrabajadores() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [leadsByProfile, setLeadsByProfile] = useState<Map<string, WorkerLead>>(new Map());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   async function load() {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .neq("worker_status", "none")
-      .order("created_at", { ascending: false });
-    if (error) setError(error.message);
-    else setProfiles((data as Profile[]) ?? []);
+    const [profilesRes, leadsRes] = await Promise.all([
+      supabase.from("profiles").select("*").neq("worker_status", "none").order("created_at", { ascending: false }),
+      supabase.from("worker_leads").select("*").eq("status", "converted"),
+    ]);
+
+    if (profilesRes.error) setError(profilesRes.error.message);
+    else setProfiles((profilesRes.data as Profile[]) ?? []);
+
+    const leads = (leadsRes.data as WorkerLead[]) ?? [];
+    setLeadsByProfile(new Map(leads.filter((l) => l.converted_profile_id).map((l) => [l.converted_profile_id!, l])));
+
     setLoading(false);
   }
 
@@ -75,44 +80,54 @@ export default function AdminTrabajadores() {
                 p.identity_status !== "verified" && "identidad",
                 !p.avatar_url && "foto de perfil",
               ].filter(Boolean);
+              const lead = leadsByProfile.get(p.id);
               return (
-                <div key={p.id} className={`${cardBase} flex items-center justify-between gap-4`}>
-                  <div className="flex items-center gap-3">
-                    {p.avatar_url ? (
-                      <img src={p.avatar_url} alt="" className="h-10 w-10 flex-shrink-0 rounded-full object-cover" />
-                    ) : (
-                      <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-surface-2 text-xs text-ink-muted">
-                        Sin foto
-                      </span>
-                    )}
-                    <div>
-                      <p className="font-semibold text-ink">{p.full_name ?? p.email}</p>
-                      <p className="mt-0.5 text-xs text-ink-muted">{p.email}</p>
-                      <p className="mt-0.5 text-xs text-ink-muted">{IDENTITY_LABELS[p.identity_status]}</p>
+                <div key={p.id} className={cardBase}>
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      {p.avatar_url ? (
+                        <img src={p.avatar_url} alt="" className="h-10 w-10 flex-shrink-0 rounded-full object-cover" />
+                      ) : (
+                        <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-surface-2 text-xs text-ink-muted">
+                          Sin foto
+                        </span>
+                      )}
+                      <div>
+                        <p className="font-semibold text-ink">{p.full_name ?? p.email}</p>
+                        <p className="mt-0.5 text-xs text-ink-muted">{p.email}</p>
+                        <p className="mt-0.5 text-xs text-ink-muted">{IDENTITY_LABELS[p.identity_status]}</p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex flex-shrink-0 flex-col items-end gap-2">
-                    <div className="flex gap-2">
+                    <div className="flex flex-shrink-0 flex-col items-end gap-2">
+                      <div className="flex gap-2">
+                        <button
+                          className={btnPrimary}
+                          onClick={() => setStatus(p, "approved")}
+                          disabled={!canApprove}
+                          title={canApprove ? undefined : `Falta: ${missing.join(", ")}`}
+                        >
+                          Aprobar
+                        </button>
+                        <button className={btnDanger} onClick={() => setStatus(p, "rejected")}>
+                          Rechazar
+                        </button>
+                      </div>
                       <button
-                        className={btnPrimary}
-                        onClick={() => setStatus(p, "approved")}
-                        disabled={!canApprove}
-                        title={canApprove ? undefined : `Falta: ${missing.join(", ")}`}
+                        className={`${btnGhost} !py-1 text-xs`}
+                        onClick={() => setStatus(p, "none")}
+                        title="Para cuentas que nunca pidieron ser trabajador (ej. quedaron así por un bug ya corregido)"
                       >
-                        Aprobar
-                      </button>
-                      <button className={btnDanger} onClick={() => setStatus(p, "rejected")}>
-                        Rechazar
+                        Quitar postulación (nunca la pidió)
                       </button>
                     </div>
-                    <button
-                      className={`${btnGhost} !py-1 text-xs`}
-                      onClick={() => setStatus(p, "none")}
-                      title="Para cuentas que nunca pidieron ser trabajador (ej. quedaron así por un bug ya corregido)"
-                    >
-                      Quitar postulación (nunca la pidió)
-                    </button>
                   </div>
+
+                  {lead && (
+                    <div className="mt-3 border-t border-line pt-3 text-xs text-ink-muted">
+                      <p>Postuló desde el formulario público — Teléfono: {lead.phone ?? "—"}</p>
+                      {lead.message && <p className="mt-1">"{lead.message}"</p>}
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -123,18 +138,30 @@ export default function AdminTrabajadores() {
           <>
             <h2 className="mt-10 font-display text-xl font-semibold text-ink">Historial</h2>
             <div className="mt-4 flex flex-col gap-3">
-              {decided.map((p) => (
-                <div key={p.id} className={`${cardBase} flex items-center justify-between gap-4`}>
-                  <div>
-                    <p className="font-semibold text-ink">{p.full_name ?? p.email}</p>
-                    <p className="mt-0.5 text-xs text-ink-muted">{p.email}</p>
-                    <p className="mt-0.5 text-xs text-ink-muted">{IDENTITY_LABELS[p.identity_status]}</p>
+              {decided.map((p) => {
+                const lead = leadsByProfile.get(p.id);
+                return (
+                  <div key={p.id} className={cardBase}>
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <p className="font-semibold text-ink">{p.full_name ?? p.email}</p>
+                        <p className="mt-0.5 text-xs text-ink-muted">{p.email}</p>
+                        <p className="mt-0.5 text-xs text-ink-muted">{IDENTITY_LABELS[p.identity_status]}</p>
+                      </div>
+                      <span className="flex-shrink-0 text-sm text-ink-muted">
+                        {STATUS_LABELS[p.worker_status]}
+                      </span>
+                    </div>
+
+                    {lead && (
+                      <div className="mt-3 border-t border-line pt-3 text-xs text-ink-muted">
+                        <p>Postuló desde el formulario público — Teléfono: {lead.phone ?? "—"}</p>
+                        {lead.message && <p className="mt-1">"{lead.message}"</p>}
+                      </div>
+                    )}
                   </div>
-                  <span className="flex-shrink-0 text-sm text-ink-muted">
-                    {STATUS_LABELS[p.worker_status]}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </>
         )}

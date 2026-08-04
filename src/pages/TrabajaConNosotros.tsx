@@ -72,8 +72,8 @@ function LeadForm() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!fullName.trim() || !email.trim()) {
-      setError("Completa nombre y correo.");
+    if (!fullName.trim() || !email.trim() || !phone.trim()) {
+      setError("Completa nombre, correo y teléfono.");
       return;
     }
 
@@ -108,7 +108,8 @@ function LeadForm() {
         <p className="font-display text-xl font-semibold text-ink">¡Gracias! Recibimos tu postulación.</p>
         <p className="mt-1 text-sm text-ink-muted">
           Te contactamos apenas la revisemos. Cuando esté aprobada, vas a necesitar iniciar sesión con
-          este mismo correo ({email}) para empezar a trabajar.
+          este mismo correo ({email}) para empezar a trabajar — ahí también te vamos a pedir verificar tu
+          identidad y subir una foto de perfil, requisitos antes de que un admin te apruebe.
         </p>
         <Link to="/" className={`${btnGhost} !px-0 mt-4 inline-flex`}>
           ← Volver al inicio
@@ -161,7 +162,7 @@ function LeadForm() {
 
         <div className="flex flex-col gap-1.5">
           <label htmlFor="leadTelefono" className="text-sm font-medium text-ink-muted">
-            Teléfono (opcional)
+            Teléfono
           </label>
           <input
             id="leadTelefono"
@@ -170,6 +171,7 @@ function LeadForm() {
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             placeholder="+56 9 1234 5678"
+            required
           />
         </div>
 

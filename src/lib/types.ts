@@ -52,6 +52,18 @@ export type WorkerNote = {
   created_at: string;
 };
 
+export type WorkerLead = {
+  id: string;
+  full_name: string;
+  email: string;
+  phone: string | null;
+  message: string | null;
+  status: "pending" | "converted";
+  converted_profile_id: string | null;
+  created_at: string;
+  converted_at: string | null;
+};
+
 export type PricingType = "fixed" | "distance" | "per_person";
 
 export type Service = {

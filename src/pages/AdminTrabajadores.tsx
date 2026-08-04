@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import type { IdentityStatus, Profile, WorkerStatus } from "../lib/types";
 import { AdminLayout } from "../components/AdminLayout";
-import { btnPrimary, btnDanger, cardBase } from "../lib/ui";
+import { btnPrimary, btnGhost, btnDanger, cardBase } from "../lib/ui";
 
 const STATUS_LABELS: Record<WorkerStatus, string> = {
   none: "Sin postular",
@@ -105,6 +105,13 @@ export default function AdminTrabajadores() {
                         Rechazar
                       </button>
                     </div>
+                    <button
+                      className={`${btnGhost} !py-1 text-xs`}
+                      onClick={() => setStatus(p, "none")}
+                      title="Para cuentas que nunca pidieron ser trabajador (ej. quedaron así por un bug ya corregido)"
+                    >
+                      Quitar postulación (nunca la pidió)
+                    </button>
                   </div>
                 </div>
               );

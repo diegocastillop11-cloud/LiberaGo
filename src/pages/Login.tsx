@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/AuthContext";
+import { supabase } from "../lib/supabase";
 import { Logo } from "../components/Logo";
 import type { Profile } from "../lib/types";
 import { btnPrimary, btnSecondary, btnGhost, inputBase } from "../lib/ui";
@@ -81,6 +82,12 @@ export default function Login() {
       return;
     }
     if (mode === "signup") {
+      // Si Supabase no exige confirmar el correo, ya hay sesión activa acá y
+      // esto evita mostrarle a este usuario la pantalla de aceptación de
+      // T&C de nuevo — ya la aceptó con el checkbox de arriba. Si exige
+      // confirmación, no hay sesión todavía y el RPC no hace nada (lo
+      // atrapa el gate en RequireAuth cuando confirme e ingrese).
+      await supabase.rpc("accept_terms");
       setInfo(
         signupAs === "trabajador"
           ? "Cuenta creada. Tu postulación como trabajador quedó pendiente de aprobación."

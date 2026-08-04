@@ -61,12 +61,22 @@ export default function VerificarIdentidad() {
             </p>
           )}
 
-          {status === "pending" && (
+          {status === "pending" && justReturned && (
             <p className="mt-3 text-sm text-ink-muted">
-              {justReturned
-                ? "Estamos confirmando tu verificación, esto puede tardar unos segundos…"
-                : "Tu verificación está en revisión."}
+              Estamos confirmando tu verificación, esto puede tardar unos segundos…
             </p>
+          )}
+
+          {status === "pending" && !justReturned && (
+            <>
+              <p className="mt-3 text-sm text-ink-muted">
+                Tu verificación quedó pendiente. Si no llegaste a completarla (por ejemplo, si
+                volviste atrás antes de terminar), puedes intentarlo de nuevo.
+              </p>
+              <button className={`${btnPrimary} mt-4`} onClick={start} disabled={starting}>
+                {starting ? "Redirigiendo…" : "Intentar de nuevo"}
+              </button>
+            </>
           )}
 
           {(status === "none" || status === "declined") && (
@@ -74,7 +84,7 @@ export default function VerificarIdentidad() {
               <p className="mt-3 text-sm text-ink-muted">
                 {status === "declined"
                   ? "Tu verificación anterior no se pudo confirmar. Puedes volver a intentarlo."
-                  : "Necesitamos confirmar tu identidad con tu cédula y una selfie, antes de que puedas postular como trabajador o hacer una segunda solicitud como cliente."}
+                  : "Necesitamos confirmar tu identidad con tu cédula y una selfie, antes de que un admin pueda aprobar tu postulación como trabajador."}
               </p>
               <button className={`${btnPrimary} mt-4`} onClick={start} disabled={starting}>
                 {starting ? "Redirigiendo…" : "Verificar mi identidad"}

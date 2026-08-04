@@ -12,6 +12,8 @@ export type Profile = {
   identity_status: IdentityStatus;
   identity_session_id: string | null;
   identity_verified_at: string | null;
+  rut: string | null;
+  terms_accepted_at: string | null;
   created_at: string;
 };
 

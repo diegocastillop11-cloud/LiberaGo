@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../lib/AuthContext";
 import { supabase } from "../lib/supabase";
@@ -45,6 +45,17 @@ export function RequireAuth({
     );
   }
 
+  // Fuente de verdad real de la aceptación de T&C — no el checkbox del
+  // formulario de registro por sí solo, porque Google OAuth no distingue
+  // "registrarme" de "ingresar" (ver 0018_terms_acceptance.sql).
+  if (profile && !profile.terms_accepted_at) {
+    return (
+      <Screen>
+        <TermsGate onAccepted={refreshProfile} />
+      </Screen>
+    );
+  }
+
   if (require === "admin" && !profile?.is_admin) {
     return (
       <Screen>
@@ -68,6 +79,44 @@ export function RequireAuth({
   }
 
   return <>{children}</>;
+}
+
+function TermsGate({ onAccepted }: { onAccepted: () => void }) {
+  const [checked, setChecked] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  async function accept() {
+    setSubmitting(true);
+    const { error } = await supabase.rpc("accept_terms");
+    setSubmitting(false);
+    if (!error) onAccepted();
+  }
+
+  return (
+    <>
+      <p className="font-display text-xl font-semibold text-ink">Acepta los Términos y Condiciones</p>
+      <p className="text-sm text-ink-muted">
+        Antes de seguir usando LiberaGo necesitamos que aceptes los{" "}
+        <Link to="/terminos" target="_blank" className="text-action underline-offset-4 hover:underline">
+          Términos y Condiciones
+        </Link>
+        , incluyendo la verificación de identidad y el tratamiento de tus datos personales que ahí
+        se describe.
+      </p>
+      <label className="flex items-start gap-2 text-left text-sm text-ink-muted">
+        <input
+          type="checkbox"
+          checked={checked}
+          onChange={(e) => setChecked(e.target.checked)}
+          className="mt-0.5 h-4 w-4 flex-shrink-0 rounded-sm border-line accent-action"
+        />
+        <span>He leído y acepto los Términos y Condiciones.</span>
+      </label>
+      <button className={btnPrimary} onClick={accept} disabled={!checked || submitting}>
+        {submitting ? "Un momento…" : "Continuar"}
+      </button>
+    </>
+  );
 }
 
 // Un admin no puede aprobar a alguien sin identidad verificada (ver

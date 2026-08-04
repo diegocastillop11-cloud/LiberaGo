@@ -7,6 +7,7 @@ import ClienteSolicitar from "./pages/ClienteSolicitar";
 import ClienteSolicitudes from "./pages/ClienteSolicitudes";
 import ClienteSolicitudDetalle from "./pages/ClienteSolicitudDetalle";
 import VerificarIdentidad from "./pages/VerificarIdentidad";
+import VerificarRut from "./pages/VerificarRut";
 import MiPerfil from "./pages/MiPerfil";
 import TrabajadorDisponibles from "./pages/TrabajadorDisponibles";
 import AdminServices from "./pages/AdminServices";
@@ -68,6 +69,15 @@ export default function App() {
         element={
           <RequireAuth>
             <VerificarIdentidad />
+          </RequireAuth>
+        }
+      />
+
+      <Route
+        path="/rut"
+        element={
+          <RequireAuth>
+            <VerificarRut />
           </RequireAuth>
         }
       />

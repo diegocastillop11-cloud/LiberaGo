@@ -3,6 +3,7 @@ import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Terminos from "./pages/Terminos";
 import SugerirServicio from "./pages/SugerirServicio";
+import TrabajaConNosotros from "./pages/TrabajaConNosotros";
 import ClienteSolicitar from "./pages/ClienteSolicitar";
 import ClienteSolicitudes from "./pages/ClienteSolicitudes";
 import ClienteSolicitudDetalle from "./pages/ClienteSolicitudDetalle";
@@ -40,6 +41,7 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/terminos" element={<Terminos />} />
       <Route path="/sugerir-servicio" element={<SugerirServicio />} />
+      <Route path="/trabaja-con-nosotros" element={<TrabajaConNosotros />} />
 
       <Route
         path="/cliente"

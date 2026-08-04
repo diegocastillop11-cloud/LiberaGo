@@ -70,6 +70,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
 
+    // Si esta cuenta postuló a trabajador sin sesión (formulario público
+    // /trabaja-con-nosotros, ver 0028_worker_leads.sql), esto la activa
+    // apenas el correo real de la sesión coincide con esa postulación —
+    // seguro de re-ejecutar en cada login, es un no-op si no hay match.
+    if (current?.worker_status === "none") {
+      const { error } = await supabase.rpc("claim_worker_lead");
+      if (!error) {
+        const refreshed = await supabase.from("profiles").select("*").eq("id", userId).single();
+        current = (refreshed.data as Profile) ?? current;
+      }
+    }
+
     setProfile(current);
   }
 

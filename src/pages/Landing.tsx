@@ -82,7 +82,7 @@ export default function Landing() {
             <a href="#servicios" className={navLink}>
               Servicios
             </a>
-            <Link to="/trabajador" className={navLink}>
+            <Link to="/trabaja-con-nosotros" className={navLink}>
               Trabaja con nosotros
             </Link>
             <Link to="/terminos" className={navLink}>
@@ -134,7 +134,7 @@ export default function Landing() {
                 <Link to="/cliente" className={btnPrimary}>
                   Pedir un servicio
                 </Link>
-                <Link to="/trabajador" className={btnSecondary}>
+                <Link to="/trabaja-con-nosotros" className={btnSecondary}>
                   Trabajar con LiberaGo
                 </Link>
               </div>
@@ -303,7 +303,7 @@ export default function Landing() {
                 <p className="mt-2 max-w-[42ch] text-pretty text-[15px] text-ink-muted">
                   Elige las solicitudes que te acomodan, cuando quieras.
                 </p>
-                <Link to="/trabajador" className={`${btnSecondary} mt-6`}>
+                <Link to="/trabaja-con-nosotros" className={`${btnSecondary} mt-6`}>
                   Trabajar con LiberaGo
                 </Link>
               </div>

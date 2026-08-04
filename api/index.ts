@@ -6,6 +6,7 @@ import { requestsRouter } from "./_routes/requests.js";
 import { serviceSuggestionsRouter } from "./_routes/serviceSuggestions.js";
 import { identityRouter } from "./_routes/identity.js";
 import { adminRouter } from "./_routes/admin.js";
+import { workerLeadsRouter } from "./_routes/workerLeads.js";
 
 const app = express();
 app.use(
@@ -26,5 +27,6 @@ app.use("/api/requests", requestsRouter);
 app.use("/api/service-suggestions", serviceSuggestionsRouter);
 app.use("/api/identity", identityRouter);
 app.use("/api/admin", adminRouter);
+app.use("/api/worker-leads", workerLeadsRouter);
 
 export default app;

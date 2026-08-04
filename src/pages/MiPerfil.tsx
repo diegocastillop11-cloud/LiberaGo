@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../lib/AuthContext";
 import { AppHeader } from "../components/AppHeader";
+import { PostularTrabajador } from "../components/PostularTrabajador";
 import { isValidRut, formatRut } from "../lib/rut";
 import { btnPrimary, btnGhost, btnDanger, cardBase, inputBase } from "../lib/ui";
 
@@ -313,40 +314,6 @@ function DatosPersonales({
         disabled={(!nameChanged && !extraChanged) || (nameChanged && name.trim().length === 0) || saving}
       >
         {saving ? "Guardando…" : "Guardar cambios"}
-      </button>
-    </div>
-  );
-}
-
-function PostularTrabajador({ onApplied }: { onApplied: () => Promise<void> }) {
-  const [error, setError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-
-  async function apply() {
-    setError(null);
-    setSubmitting(true);
-    const { error: err } = await supabase.rpc("request_worker_status");
-    setSubmitting(false);
-    if (err) {
-      setError(err.message);
-      return;
-    }
-    await onApplied();
-  }
-
-  return (
-    <div className={cardBase}>
-      <p className="font-display text-xl font-semibold text-ink">¿Quieres trabajar con nosotros?</p>
-      <p className="mt-1 text-sm text-ink-muted">
-        Postula para hacer trámites, filas y mandados y ganar plata cuando quieras.
-      </p>
-
-      {error && (
-        <div className="mt-4 rounded-sm border border-error bg-error/10 px-4 py-3 text-sm text-error">{error}</div>
-      )}
-
-      <button type="button" className={`${btnPrimary} mt-4`} onClick={apply} disabled={submitting}>
-        {submitting ? "Enviando…" : "Postular como trabajador"}
       </button>
     </div>
   );

@@ -10,3 +10,15 @@ export async function getAuthedUserId(req: Request): Promise<string | null> {
   if (error || !data.user) return null;
   return data.user.id;
 }
+
+export async function requireAdmin(
+  req: Request,
+): Promise<{ userId: string } | { status: 401 | 403; error: string }> {
+  const userId = await getAuthedUserId(req);
+  if (!userId) return { status: 401, error: "No autorizado" };
+
+  const { data: profile } = await supabaseAdmin.from("profiles").select("is_admin").eq("id", userId).single();
+  if (!profile?.is_admin) return { status: 403, error: "No autorizado" };
+
+  return { userId };
+}

@@ -14,6 +14,8 @@ export type Profile = {
   identity_verified_at: string | null;
   rut: string | null;
   terms_accepted_at: string | null;
+  deleted_at: string | null;
+  deletion_reason: string | null;
   created_at: string;
 };
 

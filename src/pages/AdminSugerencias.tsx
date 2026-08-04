@@ -61,6 +61,12 @@ export default function AdminSugerencias() {
             <Link to="/admin/solicitudes" className={btnGhost}>
               Solicitudes
             </Link>
+            <Link to="/admin/usuarios" className={btnGhost}>
+              Usuarios
+            </Link>
+            <Link to="/admin/finanzas" className={btnGhost}>
+              Finanzas
+            </Link>
           </>
         }
       />

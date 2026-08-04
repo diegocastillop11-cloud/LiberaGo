@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import type { Profile } from "../lib/types";
 
 export function UserBadge({ profile }: { profile: Profile | null }) {
@@ -5,7 +6,10 @@ export function UserBadge({ profile }: { profile: Profile | null }) {
   const initial = label.charAt(0).toUpperCase() || "?";
 
   return (
-    <div className="hidden items-center gap-2 sm:flex">
+    <Link
+      to="/perfil"
+      className="hidden items-center gap-2 rounded-sm transition-opacity duration-200 hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action focus-visible:ring-offset-2 focus-visible:ring-offset-bg sm:flex"
+    >
       {profile?.avatar_url ? (
         <img src={profile.avatar_url} alt="" className="h-7 w-7 flex-shrink-0 rounded-full object-cover" />
       ) : (
@@ -14,6 +18,6 @@ export function UserBadge({ profile }: { profile: Profile | null }) {
         </span>
       )}
       <span className="text-sm font-semibold text-ink">{label}</span>
-    </div>
+    </Link>
   );
 }

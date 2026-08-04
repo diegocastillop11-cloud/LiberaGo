@@ -64,7 +64,8 @@ export async function dispatchToApprovedWorkers(
   const { data: workers } = await supabaseAdmin
     .from("profiles")
     .select("id")
-    .eq("worker_status", "approved");
+    .eq("worker_status", "approved")
+    .is("deleted_at", null);
 
   const queue = shuffle((workers ?? []).map((w) => w.id as string));
   await offerToNextWorker(supabaseAdmin, baseUrl, requestId, queue);

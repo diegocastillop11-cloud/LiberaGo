@@ -7,10 +7,11 @@ import { isValidRut, formatRut } from "../lib/rut";
 
 export default function VerificarRut() {
   const { profile, refreshProfile } = useAuth();
-  const [rut, setRut] = useState(profile?.rut ?? "");
+  const [rut, setRut] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const alreadySet = !!profile?.rut;
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -56,19 +57,25 @@ export default function VerificarRut() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-3">
-            <input
-              type="text"
-              className={inputBase}
-              value={rut}
-              onChange={(e) => setRut(e.target.value)}
-              placeholder="12.345.678-9"
-              required
-            />
-            <button type="submit" className={btnPrimary} disabled={submitting}>
-              {submitting ? "Guardando…" : "Guardar RUT"}
-            </button>
-          </form>
+          {alreadySet ? (
+            <p className="mt-4 text-[15px] text-ink">
+              {profile?.rut} — el RUT no se puede modificar una vez registrado.
+            </p>
+          ) : (
+            <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-3">
+              <input
+                type="text"
+                className={inputBase}
+                value={rut}
+                onChange={(e) => setRut(e.target.value)}
+                placeholder="12.345.678-9"
+                required
+              />
+              <button type="submit" className={btnPrimary} disabled={submitting}>
+                {submitting ? "Guardando…" : "Guardar RUT"}
+              </button>
+            </form>
+          )}
         </div>
       </main>
     </div>

@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { Reveal } from "../components/Reveal";
 import { UserBadge } from "../components/UserBadge";
 import { Logo } from "../components/Logo";
@@ -60,6 +60,8 @@ const confianza = [
 
 export default function Landing() {
   const { session, profile, loading, signOut } = useAuth();
+  const [searchParams] = useSearchParams();
+  const cuentaEliminada = searchParams.get("cuenta-eliminada") === "1";
 
   return (
     <>
@@ -109,6 +111,13 @@ export default function Landing() {
       </header>
 
       <main id="main">
+        {cuentaEliminada && (
+          <div className="mx-auto mt-6 max-w-[1180px] px-6">
+            <div className="rounded-sm border border-line bg-surface-2 px-4 py-3 text-sm text-ink-muted">
+              Tu cuenta fue eliminada correctamente.
+            </div>
+          </div>
+        )}
         {/* Hero */}
         <section className="mx-auto max-w-[1180px] px-6 pb-20 pt-16 md:pb-28 md:pt-24">
           <div className="grid items-center gap-14 md:grid-cols-[1.1fr_0.9fr]">

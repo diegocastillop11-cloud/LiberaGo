@@ -5,6 +5,7 @@ import { webhooksRouter } from "./_routes/webhooks.js";
 import { requestsRouter } from "./_routes/requests.js";
 import { serviceSuggestionsRouter } from "./_routes/serviceSuggestions.js";
 import { identityRouter } from "./_routes/identity.js";
+import { adminRouter } from "./_routes/admin.js";
 
 const app = express();
 app.use(
@@ -24,5 +25,6 @@ app.use("/api/webhooks", webhooksRouter);
 app.use("/api/requests", requestsRouter);
 app.use("/api/service-suggestions", serviceSuggestionsRouter);
 app.use("/api/identity", identityRouter);
+app.use("/api/admin", adminRouter);
 
 export default app;

@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../lib/AuthContext";
 import { supabase } from "../lib/supabase";
@@ -25,12 +25,32 @@ export function RequireAuth({
   children: ReactNode;
   require?: "worker" | "admin";
 }) {
-  const { session, profile, loading, refreshProfile } = useAuth();
+  const { session, profile, loading, refreshProfile, signOut } = useAuth();
+  const [accountDeleted, setAccountDeleted] = useState(false);
+
+  useEffect(() => {
+    if (profile?.deleted_at && !accountDeleted) {
+      setAccountDeleted(true);
+      signOut();
+    }
+  }, [profile?.deleted_at, accountDeleted, signOut]);
 
   if (loading) {
     return (
       <Screen>
         <p className="text-sm text-ink-muted">Cargando…</p>
+      </Screen>
+    );
+  }
+
+  if (accountDeleted) {
+    return (
+      <Screen>
+        <p className="font-display text-xl font-semibold text-ink">Cuenta eliminada</p>
+        <p className="text-sm text-ink-muted">Esta cuenta fue eliminada y ya no se puede usar.</p>
+        <Link to="/" className={btnPrimary}>
+          Volver al inicio
+        </Link>
       </Screen>
     );
   }

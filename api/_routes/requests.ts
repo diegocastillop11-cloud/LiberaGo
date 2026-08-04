@@ -1,6 +1,6 @@
 import { Router, type Request } from "express";
 import { supabaseAdmin } from "../_lib/supabase.js";
-import { getAuthedUserId } from "../_lib/auth.js";
+import { getAuthedUserId, requireAdmin } from "../_lib/auth.js";
 import { dispatchToApprovedWorkers, offerToNextWorker } from "../_lib/offerDispatch.js";
 import { createPaymentPreference, refundPayment } from "../_lib/mercadopago.js";
 
@@ -52,15 +52,9 @@ requestsRouter.post("/:id/checkout", async (req, res) => {
 // "cancelado") — disparado por un admin desde el panel, nunca automatico
 // (ver CLAUDE.md).
 requestsRouter.post("/:id/refund", async (req, res) => {
-  const userId = await getAuthedUserId(req);
-  if (!userId) {
-    res.status(401).json({ error: "No autorizado" });
-    return;
-  }
-
-  const { data: profile } = await supabaseAdmin.from("profiles").select("is_admin").eq("id", userId).single();
-  if (!profile?.is_admin) {
-    res.status(403).json({ error: "No autorizado" });
+  const admin = await requireAdmin(req);
+  if ("error" in admin) {
+    res.status(admin.status).json({ error: admin.error });
     return;
   }
 

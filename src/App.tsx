@@ -14,6 +14,8 @@ import AdminServices from "./pages/AdminServices";
 import AdminTrabajadores from "./pages/AdminTrabajadores";
 import AdminSolicitudes from "./pages/AdminSolicitudes";
 import AdminSugerencias from "./pages/AdminSugerencias";
+import AdminUsuarios from "./pages/AdminUsuarios";
+import AdminFinanzas from "./pages/AdminFinanzas";
 import { RequireAuth } from "./components/RequireAuth";
 
 function Placeholder({ title }: { title: string }) {
@@ -130,6 +132,24 @@ export default function App() {
         element={
           <RequireAuth require="admin">
             <AdminSugerencias />
+          </RequireAuth>
+        }
+      />
+
+      <Route
+        path="/admin/usuarios"
+        element={
+          <RequireAuth require="admin">
+            <AdminUsuarios />
+          </RequireAuth>
+        }
+      />
+
+      <Route
+        path="/admin/finanzas"
+        element={
+          <RequireAuth require="admin">
+            <AdminFinanzas />
           </RequireAuth>
         }
       />

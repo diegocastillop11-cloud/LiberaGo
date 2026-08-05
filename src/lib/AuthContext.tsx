@@ -7,6 +7,7 @@ import {
 } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "./supabase";
+import { readSignupIntent } from "./signupIntent";
 import type { Profile } from "./types";
 
 type AuthValue = {
@@ -22,32 +23,6 @@ type AuthValue = {
 };
 
 const AuthContext = createContext<AuthValue | null>(null);
-
-const SIGNUP_INTENT_KEY = "liberago_signup_intent";
-const SIGNUP_INTENT_MAX_AGE_MS = 10 * 60 * 1000;
-
-// El intent se guarda como JSON con timestamp (no un string plano) porque
-// si el usuario abandona el flujo de Google OAuth (cierra el popup, elige
-// otra cuenta, etc.) el localStorage queda con el flag pegado — sin la
-// expiración, el próximo login normal de CUALQUIER cuenta en ese mismo
-// navegador heredaba la postulación a trabajador sin haberlo pedido (bug
-// reportado en producción: una cuenta que nunca postuló apareció con
-// worker_status pending).
-function readSignupIntent(): "trabajador" | null {
-  const raw = window.localStorage.getItem(SIGNUP_INTENT_KEY);
-  window.localStorage.removeItem(SIGNUP_INTENT_KEY);
-  if (!raw) return null;
-
-  try {
-    const parsed = JSON.parse(raw) as { type: "trabajador"; ts: number };
-    if (parsed.type === "trabajador" && Date.now() - parsed.ts < SIGNUP_INTENT_MAX_AGE_MS) {
-      return "trabajador";
-    }
-  } catch {
-    // formato viejo (string plano) o corrupto — se descarta.
-  }
-  return null;
-}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);

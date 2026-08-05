@@ -3,7 +3,7 @@
 Conecta a personas que no quieren o no pueden hacer un trámite, fila o mandado
 tedioso (revisión técnica, fila de concierto, comprar un repuesto, etc.) con un
 trabajador que lo hace por ellas a cambio de pago.
-URL producción [https...] (dejar vacío hasta el deploy día 1, luego llenar)
+URL producción https://liberago.vercel.app
 ### Fase 0 — antes de escribir código (no borrar, es el criterio de alcance)
 1. ¿Qué problema resuelve? Conectar a alguien que no quiere/puede hacer un
    trámite, fila o mandado con un trabajador que lo hace por él, a cambio de pago.
@@ -265,6 +265,33 @@ resto de la app).
   completo que el log del deploy vía GitHub a veces trunca. Cualquier
   archivo `.ts` nuevo que se agregue directo bajo `api/` (no dentro de
   `_lib/` o `_routes/`) vuelve a sumar a este límite.
+- **Un flag de intención guardado en `localStorage` sin expiración se
+  filtra a la siguiente cuenta que loguee en el mismo navegador, no solo a
+  la que lo generó.** Qué pasó: al elegir "registrarme como trabajador" en
+  `Login.tsx`, se guardaba `liberago_signup_intent = "trabajador"` en
+  `localStorage` antes de disparar el login (necesario para sobrevivir el
+  redirect de Google OAuth, que saca de la página). `AuthContext.tsx` lo
+  leía y aplicaba `request_worker_status()` en el primer `loadProfile()`
+  después de esa sesión. El problema: si el usuario abandonaba el flujo de
+  Google a mitad de camino (cerraba el popup, elegía otra cuenta en el
+  selector, el OAuth fallaba) nunca se disparaba `onAuthStateChange` con
+  sesión nueva, así que la key nunca se limpiaba — quedaba pegada
+  indefinidamente. La próxima vez que *cualquier* cuenta (sin relación con
+  el intento original) hacía un login normal en ese mismo navegador,
+  `loadProfile()` encontraba el flag, veía `worker_status='none'` en esa
+  cuenta y la postulaba a trabajador sin que nadie lo pidiera — pasó en
+  producción con cuentas reales de clientes (no solo cuentas de prueba).
+  Por qué: nada ataba el flag a una ventana de tiempo ni a un intento de
+  login específico — sobrevivía para siempre hasta que algún login,
+  cualquiera, lo consumiera. Cómo se arregló: el flag ahora se guarda como
+  JSON con timestamp (no un string plano) y expira a los 10 minutos
+  (`src/lib/signupIntent.ts`); además cualquier login que **no** sea un
+  registro como trabajador limpia la key de forma proactiva antes de
+  intentar loguear, en vez de confiar en que algo la vaya a consumir
+  después. Cómo detectarlo a futuro: cualquier dato en `localStorage`/
+  `sessionStorage` que se lea desde un flujo async distinto al que lo
+  escribió (típico en redirects de OAuth) necesita timestamp + expiración
+  — nunca asumir que el próximo evento que lo lea es el que lo escribió.
 ## Backlog  después
 - [Ideas descartadas para ahora con motivo — evita reabrir sin evidencia
   nueva]

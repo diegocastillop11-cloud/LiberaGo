@@ -3,14 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/AuthContext";
 import { Logo } from "../components/Logo";
 import type { Profile } from "../lib/types";
+import { setSignupIntent, clearSignupIntent } from "../lib/signupIntent";
 import { btnPrimary, btnSecondary, btnGhost, inputBase } from "../lib/ui";
 
 const MIN_PASSWORD_LENGTH = 8;
-const SIGNUP_INTENT_KEY = "liberago_signup_intent";
-
-function setSignupIntent() {
-  window.localStorage.setItem(SIGNUP_INTENT_KEY, JSON.stringify({ type: "trabajador", ts: Date.now() }));
-}
 
 function friendlyError(message: string): string {
   if (message.includes("Invalid login credentials")) return "Correo o contraseña incorrectos.";
@@ -71,7 +67,7 @@ export default function Login() {
       // Un login normal nunca debe heredar un intent de "trabajador" que
       // haya quedado pegado de un intento de registro anterior abandonado
       // (ver AuthContext.tsx).
-      window.localStorage.removeItem(SIGNUP_INTENT_KEY);
+      clearSignupIntent();
     }
 
     setSubmitting(true);
@@ -107,7 +103,7 @@ export default function Login() {
     if (mode === "signup" && signupAs === "trabajador") {
       setSignupIntent();
     } else {
-      window.localStorage.removeItem(SIGNUP_INTENT_KEY);
+      clearSignupIntent();
     }
     setError(null);
     signInWithGoogle();

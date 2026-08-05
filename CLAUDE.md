@@ -42,6 +42,7 @@ mantenimiento para un solo dev en el arranque; se puede separar después si duel
 | Deploy | Vercel | Push a master = deploy; previews por rama |
 | Pagos | MercadoPago (Checkout Pro) | El cliente paga al crear la solicitud, antes de que un trabajador la vea — encaja con el reembolso del 50% de los T&C para "no completado". Igual patrón que Ergania: fetch directo a la API de MP, sin SDK. Agregado 2026-08-01, después de validar el flujo pedido→aceptación sin pago |
 | IA | No aplica por ahora | — |
+| App Android | Capacitor (WebView apuntando a `https://liberago.vercel.app` vía `server.url`, sin bundlear `dist` como contenido offline) | Misma app, cero duplicación de rutas relativas `/api/*` ni de `redirectTo` de OAuth — mostrar el sitio real evita reimplementar nada. APK se compila en GitHub Actions (`.github/workflows/android-apk.yml`), no localmente (esta máquina no tiene Android SDK/JDK). Agregado 2026-08-05 |
 Decisiones de runtime tomadas ANTES de codear
 - ¿Dónde corre en producción? Serverless (Vercel functions) → nada de Chrome
   headless, nada de filesystem persistente, nada de procesos largos o
@@ -55,9 +56,17 @@ npm run dev         # vercel dev — levanta frontend + funciones /api juntos (r
 npm run build        # tsc -b && vite build
 npm run typecheck    # tsc -b --noEmit
 npm run test          # vitest run
+npm run android:sync # build + npx cap sync android — actualiza el proyecto nativo, no compila la APK
 ```
 Deploy es automático: push a una rama → preview en Vercel; push/merge a `master`
 → producción (con OK explícito antes, ver Reglas generales #10).
+
+La APK de Android se compila en GitHub Actions
+(`.github/workflows/android-apk.yml`), no localmente — esta máquina no tiene
+Android SDK ni JDK instalados. Cada push a `master`/`feat/**`/`fix/**` sube un
+`.apk` debug (sin firmar) como artifact del run; se instala en el celular
+habilitando "orígenes desconocidos". Firmar una APK release para Play Store
+queda pendiente (necesita keystore — decisión de cuando se suba de verdad).
 ## Estructura de carpetas
 ```
 api/
@@ -172,6 +181,32 @@ resto de la app).
     explícito. No asumir aprobación por silencio ni por aprobaciones
     anteriores de otros cambios.
 ## Gotchas
+- **Google bloquea el login OAuth dentro del WebView embebido de una app
+  Android (Capacitor) con `Error 400: disallowed_useragent`.**
+  Qué pasó: al empaquetar el sitio como APK (Capacitor, WebView sobre
+  `https://liberago.vercel.app`), el botón "Iniciar con Google" funciona en
+  el navegador normal pero fallaría dentro de la app — Google detecta el
+  user-agent de un WebView embebido y rechaza el flujo OAuth a propósito
+  (política anti-phishing suya, no un bug nuestro). Por qué: cualquier
+  WebView (Capacitor, Cordova, un `<webview>` nativo) comparte esa
+  restricción — no es específico de Supabase ni de este proyecto. Cómo se
+  evitó: en `signInWithGoogle` (`src/lib/AuthContext.tsx`), si
+  `Capacitor.isNativePlatform()` es true, se pide la URL de OAuth con
+  `skipBrowserRedirect: true` y se abre con `@capacitor/browser` (Chrome
+  Custom Tabs, no el WebView de la app — a Google esto sí le parece un
+  navegador real). El `redirectTo` pasa a ser el deep link
+  `com.liberago.app://login` (intent-filter agregado a mano en
+  `android/app/src/main/AndroidManifest.xml` — Capacitor no lo agrega
+  solo); `@capacitor/app` escucha `appUrlOpen`, extrae `code` o
+  `access_token`/`refresh_token` de la URL y llama a
+  `supabase.auth.exchangeCodeForSession`/`setSession` a mano, porque el
+  evento nativo no pasa por `window.location` y el detector automático de
+  sesión de supabase-js no lo ve. Pendiente antes de que esto funcione de
+  verdad: agregar `com.liberago.app://login` a la lista de "Additional
+  Redirect URLs" en Supabase Dashboard → Authentication → URL
+  Configuration (a mano, mismo patrón que las credenciales de Google Cloud
+  — ver arriba). Login con email/password no tiene este problema porque no
+  sale del WebView.
 - **Un trigger `BEFORE UPDATE` sin bypass explícito para `service_role`
   bloquea las actualizaciones hechas por el backend con la service key.**
   Qué pasó: al diseñar el webhook de pago (que necesita mover una solicitud

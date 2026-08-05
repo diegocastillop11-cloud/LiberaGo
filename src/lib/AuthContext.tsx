@@ -6,9 +6,21 @@ import {
   type ReactNode,
 } from "react";
 import type { Session, User } from "@supabase/supabase-js";
+import { Capacitor } from "@capacitor/core";
+import { App as CapApp } from "@capacitor/app";
+import { Browser } from "@capacitor/browser";
 import { supabase } from "./supabase";
 import { readSignupIntent } from "./signupIntent";
 import type { Profile } from "./types";
+
+const NATIVE_OAUTH_REDIRECT = "com.liberago.app://login";
+
+function extractSessionParams(url: string): URLSearchParams {
+  const hashIndex = url.indexOf("#");
+  const queryIndex = url.indexOf("?");
+  const raw = hashIndex >= 0 ? url.slice(hashIndex + 1) : queryIndex >= 0 ? url.slice(queryIndex + 1) : "";
+  return new URLSearchParams(raw);
+}
 
 type AuthValue = {
   session: Session | null;
@@ -87,7 +99,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    const listenerPromise = CapApp.addListener("appUrlOpen", async ({ url }) => {
+      if (!url.startsWith(NATIVE_OAUTH_REDIRECT)) return;
+      await Browser.close().catch(() => {});
+
+      const params = extractSessionParams(url);
+      const code = params.get("code");
+      const access_token = params.get("access_token");
+      const refresh_token = params.get("refresh_token");
+
+      if (code) {
+        await supabase.auth.exchangeCodeForSession(code);
+      } else if (access_token && refresh_token) {
+        await supabase.auth.setSession({ access_token, refresh_token });
+      }
+    });
+
+    return () => {
+      listenerPromise.then((l) => l.remove());
+    };
+  }, []);
+
   async function signInWithGoogle() {
+    if (Capacitor.isNativePlatform()) {
+      // Google bloquea el login OAuth dentro de un WebView embebido
+      // ("disallowed_useragent") — hay que abrirlo en Chrome Custom Tabs
+      // (@capacitor/browser) y volver a la app por el deep link
+      // com.liberago.app://login (ver intent-filter en AndroidManifest.xml).
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: NATIVE_OAUTH_REDIRECT, skipBrowserRedirect: true },
+      });
+      if (!error && data?.url) await Browser.open({ url: data.url });
+      return;
+    }
+
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: `${window.location.origin}/login` },

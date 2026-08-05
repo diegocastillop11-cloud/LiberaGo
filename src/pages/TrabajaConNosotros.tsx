@@ -107,10 +107,13 @@ function LeadForm() {
       <div className={cardBase}>
         <p className="font-display text-xl font-semibold text-ink">¡Gracias! Recibimos tu postulación.</p>
         <p className="mt-1 text-sm text-ink-muted">
-          Te contactamos apenas la revisemos. Cuando esté aprobada, vas a necesitar iniciar sesión con
-          este mismo correo ({email}) para empezar a trabajar — ahí también te vamos a pedir verificar tu
-          identidad y subir una foto de perfil, requisitos antes de que un admin te apruebe.
+          Para terminar el proceso, inicia sesión ahora con este mismo correo ({email}) — ahí te vamos a
+          pedir verificar tu identidad y subir una foto de perfil, requisitos antes de que un admin te
+          apruebe.
         </p>
+        <Link to="/login" className={`${btnPrimary} mt-4 inline-flex`}>
+          Iniciar sesión y terminar el proceso
+        </Link>
         <Link to="/" className={`${btnGhost} !px-0 mt-4 inline-flex`}>
           ← Volver al inicio
         </Link>

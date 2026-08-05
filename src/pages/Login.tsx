@@ -21,7 +21,9 @@ function friendlyError(message: string): string {
 
 function destinationFor(profile: Profile): string {
   if (profile.is_admin) return "/admin";
-  if (profile.worker_status === "approved") return "/trabajador";
+  // 'pending' también va a /trabajador — WorkerGate ya muestra "postulación
+  // en revisión" y pide verificar identidad/subir foto si faltan.
+  if (profile.worker_status === "approved" || profile.worker_status === "pending") return "/trabajador";
   return "/cliente";
 }
 
